@@ -19,7 +19,7 @@ public enum RoadType
     Corner
 }
 
-public enum RoadRotation
+public enum Rotation
 {
     ZERO,
     NINETY,
@@ -29,6 +29,51 @@ public enum RoadRotation
 
 public class DirectionUtils
 {
+    public static Dictionary<Rotation, int> directionToIntMapping = new Dictionary<Rotation, int>()
+    {
+        {Rotation.ZERO, 0}, {Rotation.NINETY, 270}, {Rotation.ONEEIGHTY, 180}, {Rotation.TWOSEVENTY, 90}
+    };
+
+    public static Dictionary<Rotation, Dictionary<Direction, Direction>> directionRotationMapping = new Dictionary<Rotation, Dictionary<Direction, Direction>>()
+    {
+        {
+            Rotation.ZERO, new Dictionary<Direction, Direction>()
+            {
+                {Direction.NORTH, Direction.NORTH},
+                {Direction.EAST, Direction.EAST},
+                {Direction.SOUTH, Direction.SOUTH},
+                {Direction.WEST, Direction.WEST}
+            }
+        },
+        {
+            Rotation.NINETY, new Dictionary<Direction, Direction>()
+            {
+                {Direction.NORTH, Direction.EAST},
+                {Direction.EAST, Direction.SOUTH},
+                {Direction.SOUTH, Direction.WEST},
+                {Direction.WEST, Direction.NORTH}
+            }
+        },
+        {
+            Rotation.ONEEIGHTY, new Dictionary<Direction, Direction>()
+            {
+                {Direction.NORTH, Direction.SOUTH},
+                {Direction.EAST, Direction.WEST},
+                {Direction.SOUTH, Direction.NORTH},
+                {Direction.WEST, Direction.EAST}
+            }
+        },
+        {
+            Rotation.TWOSEVENTY, new Dictionary<Direction, Direction>()
+            {
+                {Direction.NORTH, Direction.WEST},
+                {Direction.EAST, Direction.NORTH},
+                {Direction.SOUTH, Direction.EAST},
+                {Direction.WEST, Direction.SOUTH}
+            }
+        }
+    };
+
     public static Dictionary<Direction, Vector2> directionToCoordinates = new Dictionary<Direction, Vector2>() {
         {Direction.NORTH, Vector2.up}, {Direction.EAST, Vector2.right}, {Direction.SOUTH, Vector2.down}, {Direction.WEST, Vector2.left}
     };
@@ -86,10 +131,10 @@ public class DirectionUtils
 
     };
 
-    public static Dictionary<RoadRotation, Dictionary<NodeLocation, NodeLocation>> rotationMapping = new Dictionary<RoadRotation, Dictionary<NodeLocation, NodeLocation>>()
+    public static Dictionary<Rotation, Dictionary<NodeLocation, NodeLocation>> rotationMapping = new Dictionary<Rotation, Dictionary<NodeLocation, NodeLocation>>()
     {
         {
-            RoadRotation.ZERO, new Dictionary<NodeLocation, NodeLocation>()
+            Rotation.ZERO, new Dictionary<NodeLocation, NodeLocation>()
             {
                 {NodeLocation.TR, NodeLocation.TR},
                 {NodeLocation.TL, NodeLocation.TL},
@@ -98,7 +143,7 @@ public class DirectionUtils
             }
         },
         {
-            RoadRotation.NINETY, new Dictionary<NodeLocation, NodeLocation>()
+            Rotation.NINETY, new Dictionary<NodeLocation, NodeLocation>()
             {
                 {NodeLocation.TR, NodeLocation.BR},
                 {NodeLocation.BR, NodeLocation.BL},
@@ -107,7 +152,7 @@ public class DirectionUtils
             }
         },
         {
-            RoadRotation.ONEEIGHTY, new Dictionary<NodeLocation, NodeLocation>()
+            Rotation.ONEEIGHTY, new Dictionary<NodeLocation, NodeLocation>()
             {
                 {NodeLocation.TR, NodeLocation.BL},
                 {NodeLocation.BR, NodeLocation.TL},
@@ -116,7 +161,7 @@ public class DirectionUtils
             }
         },
         {
-            RoadRotation.TWOSEVENTY, new Dictionary<NodeLocation, NodeLocation>()
+            Rotation.TWOSEVENTY, new Dictionary<NodeLocation, NodeLocation>()
             {
                 {NodeLocation.TR, NodeLocation.TL},
                 {NodeLocation.BR, NodeLocation.TR},

@@ -6,7 +6,7 @@ public class Tile : MonoBehaviour
 {
     Setup setup;
     public RoadType roadType;
-    public RoadRotation roadRotation;
+    public Rotation roadRotation;
     public GameObject tl;
     public GameObject tr;
     public GameObject br;
@@ -78,7 +78,7 @@ public class Tile : MonoBehaviour
 
     }
 
-    public void ReceiveConnectionAttempt(Direction direction, NodeLocation location, Node node)
+    public Node ReceiveConnectionAttempt(Direction direction, NodeLocation location, Node node)
     {
         Dictionary<NodeLocation, NodeLocation> locationMapping = DirectionUtils.connectionMapping[direction];
         if (locationMapping.ContainsKey(location)) {
@@ -88,11 +88,10 @@ public class Tile : MonoBehaviour
                 Node nodeToConnect = nodeMap[connectLocation];
                 nodeToConnect.connections.Add(node);
                 nodeToConnect.RecalculateLinePos();
+                return nodeToConnect;
             }
         }
-        
-        
-       
+        return null;
     }
 
     public void RecalculateNodeLines()
