@@ -5,6 +5,8 @@ using UnityEngine;
 public class Tile : MonoBehaviour
 {
     Setup setup;
+    public RoadType roadType;
+    public RoadRotation roadRotation;
     public GameObject tl;
     public GameObject tr;
     public GameObject br;
@@ -38,20 +40,26 @@ public class Tile : MonoBehaviour
         
     }
 
+    public void ConnectInterally()
+    {
+        List<NodeLocation> allLocations = new List<NodeLocation>(nodeMap.Keys);
+        for (int i = 0; i < allLocations.Count; i++)
+        {
+            NodeLocation location = allLocations[i];
+            Node currentNode = nodeMap[Rotate(location)];
+            List<NodeLocation> desiredConnectionLocations = DirectionUtils.internalConnectionMapping[roadType][location];
+            for (int j = 0; j < desiredConnectionLocations.Count; j++)
+            {
+                NodeLocation connectionLocation = desiredConnectionLocations[j];
+                Node nodeToConnect = nodeMap[Rotate(connectionLocation)];
+                nodeToConnect.connections.Add(currentNode);
+            }
+        }
+    }
+
     public void ConnectToNeighboringTiles()
     {
 
-        //Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinates[Direction.NORTH]);
-        //if (neighboringTile != null)
-        //{
-        //    List<Direction> connectDirs = DirectionUtils.nodeConnectionDirections[]
-        //    neighboringTile.ReceiveConnectionAttempt(Direction.NORTH, NodeLocation.TR, tr.GetComponent<Node>());
-        //    neighboringTile.ReceiveConnectionAttempt(Direction.NORTH, NodeLocation.TR, tr.GetComponent<Node>());
-        //}
-
-
-
-        //
         List<NodeLocation> allLocations = new List<NodeLocation>(nodeMap.Keys);
         for (int i = 0; i < allLocations.Count; i++)
         {
@@ -79,11 +87,28 @@ public class Tile : MonoBehaviour
             {
                 Node nodeToConnect = nodeMap[connectLocation];
                 nodeToConnect.connections.Add(node);
+                nodeToConnect.RecalculateLinePos();
             }
         }
         
         
        
+    }
+
+    public void RecalculateNodeLines()
+    {
+        List<NodeLocation> allLocations = new List<NodeLocation>(nodeMap.Keys);
+        for (int i = 0; i < allLocations.Count; i++)
+        {
+            NodeLocation location = allLocations[i];
+            Node currentNode = nodeMap[location];
+            currentNode.RecalculateLinePos();
+        }
+    }
+
+    private NodeLocation Rotate(NodeLocation location)
+    {
+        return DirectionUtils.rotationMapping[roadRotation][location];
     }
 
 

@@ -6,16 +6,30 @@ public class Node : MonoBehaviour
 {
     public List<Node> connections = new List<Node>();
     public NodeLocation location;
+    public LineRenderer line;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        
+        line = GetComponent<LineRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    public void RecalculateLinePos()
+    {
+        line.positionCount = connections.Count * 2;
+        Vector3[] linePositions = new Vector3[line.positionCount];
+        for (int i = 0; i < connections.Count; i++)
+        {
+            linePositions[i * 2] = transform.position;
+            Node other = connections[i];
+            linePositions[i * 2 + 1] = other.transform.position;
+        }
+        line.SetPositions(linePositions);
     }
 }
