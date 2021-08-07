@@ -8,6 +8,8 @@ public class Pedestrian : MonoBehaviour
     public Node currentNode;
     public List<Node> itinerary = new List<Node>();
     public ShopType desiredShopType;
+    public float speed = 0.1f;
+    public bool headingHome = false;
 
     // Start is called before the first frame update
     void Start()
@@ -18,7 +20,27 @@ public class Pedestrian : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (itinerary.Count > 0)
+        {
+            Node target = itinerary[0];
+            float step = speed * Time.deltaTime; // calculate distance to move
+            transform.position = Vector2.MoveTowards(transform.position, target.transform.position, step);
+            if (Vector2.Distance(transform.position, target.transform.position) < 0.05)
+            {                
+                currentNode = target;
+                itinerary.RemoveAt(0);
+                if (itinerary.Count == 0) {
+                    if (!headingHome && ((Shop)currentNode.owningBuilding).shopType == desiredShopType) {
+                        currentNode.owningBuilding.ReceivePedestrian(this);
+                    } else if (headingHome && currentNode == homeNode)
+                    {
+                        currentNode.owningBuilding.ReceivePedestrian(this);
+                    }
+                
+                    
+                }
+            }
+        }
     }
 
     public void CalculateItinerary()
@@ -64,19 +86,14 @@ public class Pedestrian : MonoBehaviour
                     scores[neighbor] = newScore;
                     cameFrom[neighbor] = curNode;
                 }
-                if (neighbor.shopType == desiredShopType)
+                if ((!headingHome && neighbor.shopType == desiredShopType) || (headingHome && neighbor == homeNode))
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
                     return;
                 }
-
             }
-            
-            
         }
         this.itinerary = new List<Node>();
-
-
     }
 
     private List<Node> ReconstructPath(Dictionary<Node, Node> cameFrom, Node neighbor)

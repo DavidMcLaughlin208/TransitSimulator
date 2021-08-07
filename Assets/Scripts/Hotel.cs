@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Hotel : MonoBehaviour
+public class Hotel : Building
 {
     public Setup setup;
     public int x;
@@ -26,6 +26,7 @@ public class Hotel : MonoBehaviour
         entranceNode = entrance.GetComponent<Node>();
         entranceNode.location = NodeLocation.TR;
         entranceNode.shopType = ShopType.NONE;
+        entranceNode.owningBuilding = this;
 
     }
 
@@ -57,7 +58,8 @@ public class Hotel : MonoBehaviour
 
     public void SpawnPedestrian(ShopType shopType)
     {
-        GameObject pedestrianObj = Object.Instantiate(pedestrianPrefab, exitNode.transform);
+        GameObject pedestrianObj = Object.Instantiate(pedestrianPrefab, transform);
+        pedestrianObj.transform.position = exitNode.transform.position;
         Pedestrian pedestrian = pedestrianObj.GetComponent<Pedestrian>();
         pedestrian.currentNode = exitNode;
         pedestrian.homeNode = entranceNode;
@@ -68,5 +70,13 @@ public class Hotel : MonoBehaviour
     private NodeLocation Rotate(NodeLocation location)
     {
         return DirectionUtils.rotationMapping[rotation][location];
+    }
+
+    public override void ReceivePedestrian(Pedestrian pedestrian)
+    {
+        pedestrian.transform.position = this.exitNode.transform.position;
+        pedestrian.headingHome = false;
+        pedestrian.currentNode = this.exitNode;
+        pedestrian.CalculateItinerary();
     }
 }

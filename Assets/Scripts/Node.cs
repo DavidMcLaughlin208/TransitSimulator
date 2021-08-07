@@ -9,6 +9,7 @@ public class Node : MonoBehaviour
     public LineRenderer line;
     public string color = "";
     public ShopType shopType = ShopType.NONE;
+    public Building owningBuilding = null;
 
     // Start is called before the first frame update
     void Awake()

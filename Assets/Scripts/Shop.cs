@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Shop : MonoBehaviour
+public class Shop : Building
 {
     public Setup setup;
     public int x;
@@ -22,6 +22,7 @@ public class Shop : MonoBehaviour
         exitNode.location = NodeLocation.TL;
         entranceNode = entrance.GetComponent<Node>();
         entranceNode.location = NodeLocation.TR;
+        entranceNode.owningBuilding = this;
     }
 
     void Start()
@@ -59,5 +60,13 @@ public class Shop : MonoBehaviour
     {
         this.shopType = shopType;
         entranceNode.shopType = shopType;
+    }
+
+    public override void ReceivePedestrian(Pedestrian pedestrian)
+    {
+        pedestrian.currentNode = this.exitNode;
+        pedestrian.transform.position = this.exit.transform.position;
+        pedestrian.headingHome = true;
+        pedestrian.CalculateItinerary();
     }
 }
