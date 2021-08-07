@@ -7,6 +7,8 @@ public class Node : MonoBehaviour
     public List<Node> connections = new List<Node>();
     public NodeLocation location;
     public LineRenderer line;
+    public string color = "";
+    public ShopType shopType = ShopType.NONE;
 
     // Start is called before the first frame update
     void Awake()

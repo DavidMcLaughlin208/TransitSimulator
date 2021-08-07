@@ -44,7 +44,7 @@ public class Setup : MonoBehaviour
                 tile.ConnectToNeighboringTiles();
             }
         }
-        createHotel();
+        Hotel hotel = createHotel();
         createShop();
 
         for (int y = 0; y < gridHeight; y++)
@@ -55,6 +55,8 @@ public class Setup : MonoBehaviour
                 tile.RecalculateNodeLines();
             }
         }
+        hotel.SpawnPedestrian(ShopType.COFEE);
+        
     }
 
     // Update is called once per frame
@@ -83,7 +85,7 @@ public class Setup : MonoBehaviour
         }
     }
 
-    private void createHotel()
+    private Hotel createHotel()
     {
         GameObject hotelObj = Object.Instantiate(hotelPrefab, transform);
         hotelObj.transform.position = new Vector3(gridWidth, gridHeight - 1);
@@ -92,6 +94,7 @@ public class Setup : MonoBehaviour
         hotel.x = gridWidth;
         hotel.y = gridHeight - 1;
         hotel.ConnectToStreets();
+        return hotel;
     }
 
     private void createShop()
@@ -102,6 +105,7 @@ public class Setup : MonoBehaviour
         shop.rotation = Rotation.ZERO;
         shop.x = 0;
         shop.y = -1;
+        shop.setShopType(ShopType.COFEE);
         shop.ConnectToStreets();
     }
 }

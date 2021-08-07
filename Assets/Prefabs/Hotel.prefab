@@ -48,6 +48,8 @@ MonoBehaviour:
   connections: []
   location: 1
   line: {fileID: 2332539775898305775}
+  color: 
+  shopType: 0
 --- !u!120 &2332539775898305775
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -304,6 +306,7 @@ MonoBehaviour:
   entranceNode: {fileID: 0}
   presentOccupants: []
   allOccupants: []
+  pedestrianPrefab: {fileID: 5084677138123974960, guid: d753da5b6cd0a461297383713aee2a90, type: 3}
 --- !u!1 &5421487131510922659
 GameObject:
   m_ObjectHideFlags: 0
@@ -352,6 +355,8 @@ MonoBehaviour:
   connections: []
   location: 0
   line: {fileID: 5705531392964347933}
+  color: 
+  shopType: 0
 --- !u!120 &5705531392964347933
 LineRenderer:
   m_ObjectHideFlags: 0

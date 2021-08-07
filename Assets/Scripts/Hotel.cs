@@ -14,6 +14,7 @@ public class Hotel : MonoBehaviour
     public Node entranceNode;
     public List<Pedestrian> presentOccupants = new List<Pedestrian>();
     public List<Pedestrian> allOccupants = new List<Pedestrian>();
+    public GameObject pedestrianPrefab;
 
     // Start is called before the first frame update
     void Awake()
@@ -21,8 +22,10 @@ public class Hotel : MonoBehaviour
         setup = GameObject.Find("Setup").GetComponent<Setup>();
         exitNode = exit.GetComponent<Node>();
         exitNode.location = NodeLocation.TL;
+        exitNode.shopType = ShopType.NONE;
         entranceNode = entrance.GetComponent<Node>();
         entranceNode.location = NodeLocation.TR;
+        entranceNode.shopType = ShopType.NONE;
 
     }
 
@@ -50,6 +53,16 @@ public class Hotel : MonoBehaviour
             exitNode.connections.Add(otherNode);
 
         }
+    }
+
+    public void SpawnPedestrian(ShopType shopType)
+    {
+        GameObject pedestrianObj = Object.Instantiate(pedestrianPrefab, exitNode.transform);
+        Pedestrian pedestrian = pedestrianObj.GetComponent<Pedestrian>();
+        pedestrian.currentNode = exitNode;
+        pedestrian.homeNode = entranceNode;
+        pedestrian.desiredShopType = shopType;
+        pedestrian.CalculateItinerary();
     }
 
     private NodeLocation Rotate(NodeLocation location)

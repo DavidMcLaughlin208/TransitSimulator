@@ -13,6 +13,7 @@ public class Shop : MonoBehaviour
     public GameObject entrance;
     public Node exitNode;
     public Node entranceNode;
+    public ShopType shopType = ShopType.NONE;
     // Start is called before the first frame update
     void Awake()
     {
@@ -52,5 +53,11 @@ public class Shop : MonoBehaviour
     private NodeLocation Rotate(NodeLocation location)
     {
         return DirectionUtils.rotationMapping[rotation][location];
+    }
+
+    public void setShopType(ShopType shopType)
+    {
+        this.shopType = shopType;
+        entranceNode.shopType = shopType;
     }
 }
