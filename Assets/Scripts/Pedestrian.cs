@@ -14,7 +14,7 @@ public class Pedestrian : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(desiredShopType);
     }
 
     // Update is called once per frame

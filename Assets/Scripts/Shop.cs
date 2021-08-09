@@ -28,6 +28,7 @@ public class Shop : Building
     void Start()
     {
         this.transform.rotation = Quaternion.Euler(0, 0, DirectionUtils.directionToIntMapping[rotation]);
+        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(shopType);
     }
 
     // Update is called once per frame

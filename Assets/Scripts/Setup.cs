@@ -44,8 +44,12 @@ public class Setup : MonoBehaviour
                 tile.ConnectToNeighboringTiles();
             }
         }
-        Hotel hotel = createHotel();
-        createShop();
+        Hotel hotel1 = createHotel(new Vector2(gridWidth, gridHeight - 1), Rotation.TWOSEVENTY);
+        Hotel hotel2 = createHotel(new Vector2(2, -1), Rotation.ZERO);
+        Hotel hotel3 = createHotel(new Vector2(-1, 2), Rotation.NINETY);
+        createShop(ShopType.COFEE, new Vector2(-1, 0), Rotation.NINETY);
+        createShop(ShopType.TEA, new Vector2(-1, gridHeight - 1), Rotation.NINETY);
+        createShop(ShopType.BEER, new Vector2(gridWidth, 0), Rotation.TWOSEVENTY);
 
         for (int y = 0; y < gridHeight; y++)
         {
@@ -55,8 +59,19 @@ public class Setup : MonoBehaviour
                 tile.RecalculateNodeLines();
             }
         }
-        hotel.SpawnPedestrian(ShopType.COFEE);
-        
+        List<ShopType> shopTypes = new List<ShopType>() { ShopType.COFEE, ShopType.TEA, ShopType.BEER };
+        for (int i = 0; i < 10; i++)
+        {
+            rand = Random.Range(0, shopTypes.Count);
+            ShopType type = shopTypes[rand];
+            hotel1.SpawnPedestrian(type);
+            hotel2.SpawnPedestrian(type);
+            hotel3.SpawnPedestrian(type);
+
+        }
+        hotel1.SpawnPedestrian(ShopType.COFEE);
+        hotel1.SpawnPedestrian(ShopType.TEA);
+
     }
 
     // Update is called once per frame
@@ -85,27 +100,27 @@ public class Setup : MonoBehaviour
         }
     }
 
-    private Hotel createHotel()
+    private Hotel createHotel(Vector2 coords, Rotation rotation)
     {
         GameObject hotelObj = Object.Instantiate(hotelPrefab, transform);
-        hotelObj.transform.position = new Vector3(gridWidth, gridHeight - 1);
+        hotelObj.transform.position = new Vector2(coords.x, coords.y);
         Hotel hotel = hotelObj.GetComponent<Hotel>();
-        hotel.rotation = Rotation.TWOSEVENTY;
-        hotel.x = gridWidth;
-        hotel.y = gridHeight - 1;
+        hotel.rotation = rotation;
+        hotel.x = (int)coords.x;
+        hotel.y = (int)coords.y;
         hotel.ConnectToStreets();
         return hotel;
     }
 
-    private void createShop()
+    private void createShop(ShopType shopType, Vector2 coords, Rotation rotation)
     {
         GameObject shopObj = Object.Instantiate(shopPrefab, transform);
-        shopObj.transform.position = new Vector3(0, 0 - 1);
+        shopObj.transform.position = new Vector3(coords.x, coords.y);
         Shop shop = shopObj.GetComponent<Shop>();
-        shop.rotation = Rotation.ZERO;
-        shop.x = 0;
-        shop.y = -1;
-        shop.setShopType(ShopType.COFEE);
+        shop.rotation = rotation;
+        shop.x = (int) coords.x;
+        shop.y = (int) coords.y;
+        shop.setShopType(shopType);
         shop.ConnectToStreets();
     }
 }
