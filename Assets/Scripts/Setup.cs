@@ -26,7 +26,7 @@ public class Setup : MonoBehaviour
                 GameObject tileObj = Object.Instantiate(tilePrefab, transform);
                 Tile tile = tileObj.GetComponent<Tile>();
                 rand = Random.Range(0, roadTypes.Count);
-                tile.roadType = RoadType.Intersection;// roadTypes[rand];
+                tile.roadType = roadTypes[rand];
                 rand = Random.Range(0, rotations.Count);
                 tile.roadRotation = rotations[rand];
                 tile.x = x;

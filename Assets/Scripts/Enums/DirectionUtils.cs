@@ -29,6 +29,8 @@ public enum Rotation
 
 public class DirectionUtils
 {
+    // This is reversed because Unity counts Z-rotation counter clockwise and I coded it clockwise before I realized this
+    // TODO: Make our rotation logic counter clockwise
     public static Dictionary<Rotation, int> directionToIntMapping = new Dictionary<Rotation, int>()
     {
         {Rotation.ZERO, 0}, {Rotation.NINETY, 270}, {Rotation.ONEEIGHTY, 180}, {Rotation.TWOSEVENTY, 90}
@@ -204,7 +206,82 @@ public class DirectionUtils
                     {RoadNodeLocation.SIN, new List<RoadNodeLocation> { { RoadNodeLocation.WOUT },{ RoadNodeLocation.EOUT }, { RoadNodeLocation.NOUT } }},
                     {RoadNodeLocation.WIN, new List<RoadNodeLocation> { { RoadNodeLocation.EOUT },{ RoadNodeLocation.SOUT }, { RoadNodeLocation.NOUT } }}
                 }
+            },
+            {
+                RoadType.TJunction, new Dictionary<RoadNodeLocation, List<RoadNodeLocation>>
+                {
+                    {RoadNodeLocation.NIN, new List<RoadNodeLocation> { } },
+                    {RoadNodeLocation.EIN, new List<RoadNodeLocation> { { RoadNodeLocation.WOUT },{ RoadNodeLocation.SOUT } }},
+                    {RoadNodeLocation.SIN, new List<RoadNodeLocation> { { RoadNodeLocation.WOUT },{ RoadNodeLocation.EOUT } }},
+                    {RoadNodeLocation.WIN, new List<RoadNodeLocation> { { RoadNodeLocation.EOUT },{ RoadNodeLocation.SOUT } }}
+                }
+            },
+            {
+                RoadType.Corner, new Dictionary<RoadNodeLocation, List<RoadNodeLocation>>
+                {
+                    {RoadNodeLocation.NIN, new List<RoadNodeLocation> { } },
+                    {RoadNodeLocation.EIN, new List<RoadNodeLocation> { { RoadNodeLocation.SOUT } }},
+                    {RoadNodeLocation.SIN, new List<RoadNodeLocation> { { RoadNodeLocation.EOUT } }},
+                    {RoadNodeLocation.WIN, new List<RoadNodeLocation> { } }
+                }
             }
+        };
+
+        public static RoadNodeLocation Rotate(RoadNodeLocation location, Rotation rotation)
+        {
+            return rotationMapping[rotation][location];
+        }
+
+        public static Dictionary<Rotation, Dictionary<RoadNodeLocation, RoadNodeLocation>> rotationMapping = new Dictionary<Rotation, Dictionary<RoadNodeLocation, RoadNodeLocation>>()
+        {
+            {
+                Rotation.ZERO, new Dictionary<RoadNodeLocation, RoadNodeLocation> {
+                    {RoadNodeLocation.NIN, RoadNodeLocation.NIN},
+                    {RoadNodeLocation.NOUT, RoadNodeLocation.NOUT},
+                    {RoadNodeLocation.EIN, RoadNodeLocation.EIN},
+                    {RoadNodeLocation.EOUT, RoadNodeLocation.EOUT},
+                    {RoadNodeLocation.SIN, RoadNodeLocation.SIN},
+                    {RoadNodeLocation.SOUT, RoadNodeLocation.SOUT},
+                    {RoadNodeLocation.WIN, RoadNodeLocation.WIN},
+                    {RoadNodeLocation.WOUT, RoadNodeLocation.WOUT},
+                }
+            },
+            {
+                Rotation.NINETY, new Dictionary<RoadNodeLocation, RoadNodeLocation> {
+                    {RoadNodeLocation.NIN, RoadNodeLocation.EIN},
+                    {RoadNodeLocation.NOUT, RoadNodeLocation.EOUT},
+                    {RoadNodeLocation.EIN, RoadNodeLocation.SIN},
+                    {RoadNodeLocation.EOUT, RoadNodeLocation.SOUT},
+                    {RoadNodeLocation.SIN, RoadNodeLocation.WIN},
+                    {RoadNodeLocation.SOUT, RoadNodeLocation.WOUT},
+                    {RoadNodeLocation.WIN, RoadNodeLocation.NIN},
+                    {RoadNodeLocation.WOUT, RoadNodeLocation.NOUT},
+                }
+            },
+            {
+                Rotation.ONEEIGHTY, new Dictionary<RoadNodeLocation, RoadNodeLocation> {
+                    {RoadNodeLocation.NIN, RoadNodeLocation.SIN},
+                    {RoadNodeLocation.NOUT, RoadNodeLocation.SOUT},
+                    {RoadNodeLocation.EIN, RoadNodeLocation.WIN},
+                    {RoadNodeLocation.EOUT, RoadNodeLocation.WOUT},
+                    {RoadNodeLocation.SIN, RoadNodeLocation.NIN},
+                    {RoadNodeLocation.SOUT, RoadNodeLocation.NOUT},
+                    {RoadNodeLocation.WIN, RoadNodeLocation.EIN},
+                    {RoadNodeLocation.WOUT, RoadNodeLocation.EOUT},
+                }
+            },
+            {
+                Rotation.TWOSEVENTY, new Dictionary<RoadNodeLocation, RoadNodeLocation> {
+                    {RoadNodeLocation.NIN, RoadNodeLocation.WIN},
+                    {RoadNodeLocation.NOUT, RoadNodeLocation.WOUT},
+                    {RoadNodeLocation.EIN, RoadNodeLocation.NIN},
+                    {RoadNodeLocation.EOUT, RoadNodeLocation.NOUT},
+                    {RoadNodeLocation.SIN, RoadNodeLocation.EIN},
+                    {RoadNodeLocation.SOUT, RoadNodeLocation.EOUT},
+                    {RoadNodeLocation.WIN, RoadNodeLocation.SIN},
+                    {RoadNodeLocation.WOUT, RoadNodeLocation.SOUT},
+                }
+            },
         };
     }
 }

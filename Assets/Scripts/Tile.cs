@@ -122,14 +122,14 @@ public class Tile : MonoBehaviour
         for (int i = 0; i < allRoadLocations.Count; i++)
         {
             RoadNodeLocation location = allRoadLocations[i];
-            Node currentNode = roadNodeMap[location];
+            Node currentNode = roadNodeMap[DirectionUtils.RoadUtils.Rotate(location, roadRotation)];
             if (DirectionUtils.RoadUtils.internalConnectionMapping[roadType].ContainsKey(location))
             {
                 List<RoadNodeLocation> desiredConnectionLocations = DirectionUtils.RoadUtils.internalConnectionMapping[roadType][location];
                 for (int j = 0; j < desiredConnectionLocations.Count; j++)
                 {
                     RoadNodeLocation connectionLocation = desiredConnectionLocations[j];
-                    Node nodeToConnect = roadNodeMap[connectionLocation];
+                    Node nodeToConnect = roadNodeMap[DirectionUtils.RoadUtils.Rotate(connectionLocation, roadRotation)];
                     currentNode.connections.Add(nodeToConnect);
 
                 }
