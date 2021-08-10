@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 110977235021609918}
-  - component: {fileID: 792399159984298028}
   - component: {fileID: 2332539775898305775}
   - component: {fileID: 3294801490158386716}
+  - component: {fileID: 2189326498539984298}
   m_Layer: 0
   m_Name: Exit
   m_TagString: Untagged
@@ -33,23 +33,6 @@ Transform:
   m_Father: {fileID: 4388632035459780110}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &792399159984298028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2090528876273200062}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97532beadcaca45c8b60d40f33af8908, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  connections: []
-  location: 1
-  line: {fileID: 2332539775898305775}
-  color: 
-  shopType: 0
 --- !u!120 &2332539775898305775
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -199,6 +182,24 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &2189326498539984298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2090528876273200062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6492d7ffdb4874f69833b02793e16e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  connections: []
+  line: {fileID: 0}
+  color: 
+  shopType: 0
+  owningBuilding: {fileID: 0}
+  location: 0
 --- !u!1 &4388632035459780108
 GameObject:
   m_ObjectHideFlags: 0
@@ -316,9 +317,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4716031107580674402}
-  - component: {fileID: 8113178950119542939}
   - component: {fileID: 5705531392964347933}
   - component: {fileID: 9200374731929093178}
+  - component: {fileID: 7599448691532630739}
   m_Layer: 0
   m_Name: Entrance
   m_TagString: Untagged
@@ -340,23 +341,6 @@ Transform:
   m_Father: {fileID: 4388632035459780110}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8113178950119542939
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5421487131510922659}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97532beadcaca45c8b60d40f33af8908, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  connections: []
-  location: 0
-  line: {fileID: 5705531392964347933}
-  color: 
-  shopType: 0
 --- !u!120 &5705531392964347933
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -506,3 +490,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7599448691532630739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5421487131510922659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6492d7ffdb4874f69833b02793e16e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  connections: []
+  line: {fileID: 0}
+  color: 
+  shopType: 0
+  owningBuilding: {fileID: 0}
+  location: 0

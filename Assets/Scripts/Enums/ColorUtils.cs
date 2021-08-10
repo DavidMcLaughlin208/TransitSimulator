@@ -8,15 +8,15 @@ static class ColorUtils
     {
         if (shopType == ShopType.COFEE)
         {
-            return Color.red;
+            return solColors[SolarizedColors.brblack];
         }
         else if (shopType == ShopType.TEA)
         {
-            return Color.blue;
+            return solColors[SolarizedColors.brmagenta];
         }
         else if (shopType == ShopType.BEER)
         {
-            return Color.green;
+            return solColors[SolarizedColors.brcyan];
         }
         return Color.white;
     }

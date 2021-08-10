@@ -9,11 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5097281279361187531}
-  - component: {fileID: 7439537233523960620}
   - component: {fileID: 531305627488469526}
   - component: {fileID: 1613128665784579831}
+  - component: {fileID: -5765402650263120693}
   m_Layer: 0
-  m_Name: Node
+  m_Name: PedestrianNode
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33,21 +33,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7439537233523960620
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2706841816912791727}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97532beadcaca45c8b60d40f33af8908, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  connections: []
-  location: 0
-  line: {fileID: 0}
 --- !u!212 &531305627488469526
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -197,3 +182,21 @@ LineRenderer:
     generateLightingData: 0
   m_UseWorldSpace: 1
   m_Loop: 0
+--- !u!114 &-5765402650263120693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2706841816912791727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6492d7ffdb4874f69833b02793e16e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  connections: []
+  line: {fileID: 0}
+  color: 
+  shopType: 0
+  owningBuilding: {fileID: 0}
+  location: 0

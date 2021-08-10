@@ -26,13 +26,23 @@ public class Setup : MonoBehaviour
                 GameObject tileObj = Object.Instantiate(tilePrefab, transform);
                 Tile tile = tileObj.GetComponent<Tile>();
                 rand = Random.Range(0, roadTypes.Count);
-                tile.roadType = RoadType.Intersection;// roadTypes[rand];
+                tile.roadType = roadTypes[rand];
                 rand = Random.Range(0, rotations.Count);
-                tile.roadRotation = rotations[rand];
+                tile.tileRotation = rotations[rand];
                 tile.x = x;
                 tile.y = y;
                 tile.transform.position = new Vector2(x, y);
                 row.Add(tile);
+            }
+        }
+
+
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Tile tile = getTile(new Vector2(x, y));
+                tile.DisableUnusedRoadNodes();
             }
         }
         for (int y = 0; y < gridHeight; y++)
@@ -40,8 +50,7 @@ public class Setup : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
-                tile.ConnectInterally();
-                tile.ConnectToNeighboringTiles();
+                tile.EstablishNodeConnections();
             }
         }
         Hotel hotel1 = createHotel(new Vector2(gridWidth, gridHeight - 1), Rotation.TWOSEVENTY);
@@ -51,14 +60,7 @@ public class Setup : MonoBehaviour
         createShop(ShopType.TEA, new Vector2(-1, gridHeight - 1), Rotation.NINETY);
         createShop(ShopType.BEER, new Vector2(gridWidth, 0), Rotation.TWOSEVENTY);
 
-        for (int y = 0; y < gridHeight; y++)
-        {
-            for (int x = 0; x < gridWidth; x++)
-            {
-                Tile tile = getTile(new Vector2(x, y));
-                tile.RecalculateNodeLines();
-            }
-        }
+        
         List<ShopType> shopTypes = new List<ShopType>() { ShopType.COFEE, ShopType.TEA, ShopType.BEER };
         for (int i = 0; i < 10; i++)
         {
@@ -69,9 +71,6 @@ public class Setup : MonoBehaviour
             hotel3.SpawnPedestrian(type);
 
         }
-        hotel1.SpawnPedestrian(ShopType.COFEE);
-        hotel1.SpawnPedestrian(ShopType.TEA);
-
     }
 
     // Update is called once per frame
