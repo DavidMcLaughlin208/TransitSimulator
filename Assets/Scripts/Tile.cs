@@ -7,25 +7,26 @@ public class Tile : MonoBehaviour
     Setup setup;
     public RoadType roadType;
     public Rotation roadRotation;
-    public GameObject tl;
-    public GameObject tr;
-    public GameObject br;
-    public GameObject bl;
+    public GameObject pedTL;
+    public GameObject pedTR;
+    public GameObject pedBR;
+    public GameObject pedBL;
+
     public int x;
     public int y;
-    public Dictionary<NodeLocation, Node> nodeMap = new Dictionary<NodeLocation, Node>();
+    public Dictionary<PedestrianNodeLocation, Node> pedNodeMap = new Dictionary<PedestrianNodeLocation, Node>();
 
     void Awake()
     {
         setup = GameObject.Find("Setup").GetComponent<Setup>();
-        nodeMap.Add(NodeLocation.TL, tl.GetComponent<Node>());
-        nodeMap.Add(NodeLocation.TR, tr.GetComponent<Node>());
-        nodeMap.Add(NodeLocation.BL, bl.GetComponent<Node>());
-        nodeMap.Add(NodeLocation.BR, br.GetComponent<Node>());
-        tl.GetComponent<Node>().location = NodeLocation.TL;
-        tr.GetComponent<Node>().location = NodeLocation.TR;
-        br.GetComponent<Node>().location = NodeLocation.BR;
-        bl.GetComponent<Node>().location = NodeLocation.BL;
+        pedNodeMap.Add(PedestrianNodeLocation.TL, pedTL.GetComponent<Node>());
+        pedNodeMap.Add(PedestrianNodeLocation.TR, pedTR.GetComponent<Node>());
+        pedNodeMap.Add(PedestrianNodeLocation.BL, pedBL.GetComponent<Node>());
+        pedNodeMap.Add(PedestrianNodeLocation.BR, pedBR.GetComponent<Node>());
+        pedTL.GetComponent<Node>().location = PedestrianNodeLocation.TL;
+        pedTR.GetComponent<Node>().location = PedestrianNodeLocation.TR;
+        pedBR.GetComponent<Node>().location = PedestrianNodeLocation.BR;
+        pedBL.GetComponent<Node>().location = PedestrianNodeLocation.BL;
     }
 
     // Start is called before the first frame update
@@ -42,16 +43,16 @@ public class Tile : MonoBehaviour
 
     public void ConnectInterally()
     {
-        List<NodeLocation> allLocations = new List<NodeLocation>(nodeMap.Keys);
+        List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
         for (int i = 0; i < allLocations.Count; i++)
         {
-            NodeLocation location = allLocations[i];
-            Node currentNode = nodeMap[Rotate(location)];
-            List<NodeLocation> desiredConnectionLocations = DirectionUtils.internalConnectionMapping[roadType][location];
+            PedestrianNodeLocation location = allLocations[i];
+            Node currentNode = pedNodeMap[DirectionUtils.PedestrianUtils.Rotate(location, roadRotation)];
+            List<PedestrianNodeLocation> desiredConnectionLocations = DirectionUtils.PedestrianUtils.internalConnectionMapping[roadType][location];
             for (int j = 0; j < desiredConnectionLocations.Count; j++)
             {
-                NodeLocation connectionLocation = desiredConnectionLocations[j];
-                Node nodeToConnect = nodeMap[Rotate(connectionLocation)];
+                PedestrianNodeLocation connectionLocation = desiredConnectionLocations[j];
+                Node nodeToConnect = pedNodeMap[DirectionUtils.PedestrianUtils.Rotate(connectionLocation, roadRotation)];
                 nodeToConnect.connections.Add(currentNode);
             }
         }
@@ -60,18 +61,18 @@ public class Tile : MonoBehaviour
     public void ConnectToNeighboringTiles()
     {
 
-        List<NodeLocation> allLocations = new List<NodeLocation>(nodeMap.Keys);
+        List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
         for (int i = 0; i < allLocations.Count; i++)
         {
-            NodeLocation location = allLocations[i];
-            List<Direction> nodeDesiredDirections = DirectionUtils.nodeExternalConnectionDirections[location];
+            PedestrianNodeLocation location = allLocations[i];
+            List<Direction> nodeDesiredDirections = DirectionUtils.PedestrianUtils.nodeExternalConnectionDirections[location];
             for (int j = 0; j < nodeDesiredDirections.Count; j++)
             {
                 Direction dir = nodeDesiredDirections[j];
                 Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                 if (neighboringTile != null)
                 {
-                    neighboringTile.ReceiveConnectionAttempt(dir, location, nodeMap[location].GetComponent<Node>());
+                    neighboringTile.ReceiveConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<Node>());
                 }
             }
         }
@@ -80,14 +81,14 @@ public class Tile : MonoBehaviour
 
     // Direction is relative to the tile the call is coming from. So if a tile is connecting to another tile
     // to its right the direction would be East
-    public Node ReceiveConnectionAttempt(Direction direction, NodeLocation location, Node externalNode)
+    public Node ReceiveConnectionAttempt(Direction direction, PedestrianNodeLocation location, Node externalNode)
     {
-        Dictionary<NodeLocation, NodeLocation> locationMappingForDirection = DirectionUtils.externalConnectionMapping[direction];
+        Dictionary<PedestrianNodeLocation, PedestrianNodeLocation> locationMappingForDirection = DirectionUtils.PedestrianUtils.externalConnectionMapping[direction];
         if (locationMappingForDirection.ContainsKey(location)) {
-            NodeLocation nodeToConnectToLocation = locationMappingForDirection[location];
-            if (nodeMap.ContainsKey(nodeToConnectToLocation))
+            PedestrianNodeLocation nodeToConnectToLocation = locationMappingForDirection[location];
+            if (pedNodeMap.ContainsKey(nodeToConnectToLocation))
             {
-                Node nodeToConnect = nodeMap[nodeToConnectToLocation];
+                Node nodeToConnect = pedNodeMap[nodeToConnectToLocation];
                 nodeToConnect.connections.Add(externalNode);
                 nodeToConnect.RecalculateLinePos();
                 return nodeToConnect;
@@ -98,18 +99,13 @@ public class Tile : MonoBehaviour
 
     public void RecalculateNodeLines()
     {
-        List<NodeLocation> allLocations = new List<NodeLocation>(nodeMap.Keys);
+        List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
         for (int i = 0; i < allLocations.Count; i++)
         {
-            NodeLocation location = allLocations[i];
-            Node currentNode = nodeMap[location];
+            PedestrianNodeLocation location = allLocations[i];
+            Node currentNode = pedNodeMap[location];
             currentNode.RecalculateLinePos();
         }
-    }
-
-    private NodeLocation Rotate(NodeLocation location)
-    {
-        return DirectionUtils.rotationMapping[roadRotation][location];
     }
 
 

@@ -21,10 +21,10 @@ public class Hotel : Building
     {
         setup = GameObject.Find("Setup").GetComponent<Setup>();
         exitNode = exit.GetComponent<Node>();
-        exitNode.location = NodeLocation.TL;
+        exitNode.location = PedestrianNodeLocation.TL;
         exitNode.shopType = ShopType.NONE;
         entranceNode = entrance.GetComponent<Node>();
-        entranceNode.location = NodeLocation.TR;
+        entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.shopType = ShopType.NONE;
         entranceNode.owningBuilding = this;
 
@@ -48,9 +48,9 @@ public class Hotel : Building
         Tile neighboringTile = setup.getTile((Vector2)transform.position + offset);
         if (neighboringTile != null)
         {
-            Node otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.Rotate(entranceNode.location, rotation), entranceNode);
+            Node otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(entranceNode.location, rotation), entranceNode);
             entranceNode.connections.Add(otherNode);
-            otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.Rotate(exitNode.location, rotation), exitNode);
+            otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(exitNode.location, rotation), exitNode);
             exitNode.connections.Add(otherNode);
 
         }

@@ -19,9 +19,9 @@ public class Shop : Building
     {
         setup = GameObject.Find("Setup").GetComponent<Setup>();
         exitNode = exit.GetComponent<Node>();
-        exitNode.location = NodeLocation.TL;
+        exitNode.location = PedestrianNodeLocation.TL;
         entranceNode = entrance.GetComponent<Node>();
-        entranceNode.location = NodeLocation.TR;
+        entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.owningBuilding = this;
     }
 
@@ -44,9 +44,9 @@ public class Shop : Building
         Tile neighboringTile = setup.getTile((Vector2)transform.position + offset);
         if (neighboringTile != null)
         {
-            Node otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.Rotate(entranceNode.location, rotation), entranceNode);
+            Node otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(entranceNode.location, rotation), entranceNode);
             entranceNode.connections.Add(otherNode);
-            otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.Rotate(exitNode.location, rotation), exitNode);
+            otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(exitNode.location, rotation), exitNode);
             exitNode.connections.Add(otherNode);
 
         }

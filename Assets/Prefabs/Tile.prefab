@@ -99,10 +99,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dce09e7e8ada642d394016ce9f1769c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tl: {fileID: 3931484440945754264}
-  tr: {fileID: 1675720038064657473}
-  br: {fileID: 462362492957058260}
-  bl: {fileID: 5762818041382298977}
+  roadType: 0
+  roadRotation: 0
+  pedTL: {fileID: 3931484440945754264}
+  pedTR: {fileID: 1675720038064657473}
+  pedBR: {fileID: 462362492957058260}
+  pedBL: {fileID: 5762818041382298977}
   x: 0
   y: 0
 --- !u!1001 &1378050970294847543
@@ -118,7 +120,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2706841816912791727, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_Name
-      value: TL
+      value: PedestrianTL
       objectReference: {fileID: 0}
     - target: {fileID: 5097281279361187531, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_RootOrder
@@ -189,7 +191,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2706841816912791727, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_Name
-      value: BR
+      value: PedestrianBR
       objectReference: {fileID: 0}
     - target: {fileID: 5097281279361187531, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_RootOrder
@@ -256,7 +258,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2706841816912791727, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_Name
-      value: TR
+      value: PedestrianTR
       objectReference: {fileID: 0}
     - target: {fileID: 5097281279361187531, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_RootOrder
@@ -327,7 +329,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2706841816912791727, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_Name
-      value: BL
+      value: PedestrianBL
       objectReference: {fileID: 0}
     - target: {fileID: 5097281279361187531, guid: 31f42ca63a7b442128555ae26a1a3ea0, type: 3}
       propertyPath: m_RootOrder
