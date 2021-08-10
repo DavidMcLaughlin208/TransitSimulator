@@ -72,7 +72,14 @@ public class Tile : MonoBehaviour
         
     }
 
-    public void ConnectInterally()
+    public void EstablishNodeConnections()
+    {
+        ConnectPedestrianNodesInterally();
+        ConnectPedestrianNodesExternally();
+        ConnectRoadNodesInternally();
+    }
+
+    public void ConnectPedestrianNodesInterally()
     {
         List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
         for (int i = 0; i < allLocations.Count; i++)
@@ -89,7 +96,7 @@ public class Tile : MonoBehaviour
         }
     }
 
-    public void ConnectToNeighboringTiles()
+    public void ConnectPedestrianNodesExternally()
     {
 
         List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
@@ -107,7 +114,27 @@ public class Tile : MonoBehaviour
                 }
             }
         }
+    }
 
+    public void ConnectRoadNodesInternally()
+    {
+        List<RoadNodeLocation> allRoadLocations = new List<RoadNodeLocation>(roadNodeMap.Keys);
+        for (int i = 0; i < allRoadLocations.Count; i++)
+        {
+            RoadNodeLocation location = allRoadLocations[i];
+            Node currentNode = roadNodeMap[location];
+            if (DirectionUtils.RoadUtils.internalConnectionMapping[roadType].ContainsKey(location))
+            {
+                List<RoadNodeLocation> desiredConnectionLocations = DirectionUtils.RoadUtils.internalConnectionMapping[roadType][location];
+                for (int j = 0; j < desiredConnectionLocations.Count; j++)
+                {
+                    RoadNodeLocation connectionLocation = desiredConnectionLocations[j];
+                    Node nodeToConnect = roadNodeMap[connectionLocation];
+                    currentNode.connections.Add(nodeToConnect);
+
+                }
+            }
+        }
     }
 
     // Direction is relative to the tile the call is coming from. So if a tile is connecting to another tile
@@ -130,11 +157,18 @@ public class Tile : MonoBehaviour
 
     public void RecalculateNodeLines()
     {
-        List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
-        for (int i = 0; i < allLocations.Count; i++)
+        List<PedestrianNodeLocation> allPedLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
+        for (int i = 0; i < allPedLocations.Count; i++)
         {
-            PedestrianNodeLocation location = allLocations[i];
+            PedestrianNodeLocation location = allPedLocations[i];
             Node currentNode = pedNodeMap[location];
+            currentNode.RecalculateLinePos();
+        }
+        List<RoadNodeLocation> allRoadLocations = new List<RoadNodeLocation>(roadNodeMap.Keys);
+        for (int i = 0; i < allRoadLocations.Count; i++)
+        {
+            RoadNodeLocation location = allRoadLocations[i];
+            Node currentNode = roadNodeMap[location];
             currentNode.RecalculateLinePos();
         }
     }

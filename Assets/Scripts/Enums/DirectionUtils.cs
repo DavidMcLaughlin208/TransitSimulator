@@ -187,9 +187,24 @@ public class DirectionUtils
 
     public static class RoadUtils
     {
-        public static Dictionary<RoadType, Dictionary<PedestrianNodeLocation, PedestrianNodeLocation>> internalConnectionMapping = new Dictionary<RoadType, Dictionary<PedestrianNodeLocation, PedestrianNodeLocation>>()
+        public static Dictionary<RoadType, Dictionary<RoadNodeLocation, List<RoadNodeLocation>>> internalConnectionMapping = new Dictionary<RoadType, Dictionary<RoadNodeLocation, List<RoadNodeLocation>>>()
         {
-
+            {
+                RoadType.Straight, new Dictionary<RoadNodeLocation, List<RoadNodeLocation>>
+                {
+                    {RoadNodeLocation.EIN, new List<RoadNodeLocation> {{RoadNodeLocation.WOUT}}},
+                    {RoadNodeLocation.WIN, new List<RoadNodeLocation> {{RoadNodeLocation.EOUT}}}
+                }
+            },
+            {
+                RoadType.Intersection, new Dictionary<RoadNodeLocation, List<RoadNodeLocation>>
+                {
+                    {RoadNodeLocation.NIN, new List<RoadNodeLocation> { { RoadNodeLocation.WOUT },{ RoadNodeLocation.SOUT }, { RoadNodeLocation.EOUT } }},
+                    {RoadNodeLocation.EIN, new List<RoadNodeLocation> { { RoadNodeLocation.WOUT },{ RoadNodeLocation.SOUT }, { RoadNodeLocation.NOUT } }},
+                    {RoadNodeLocation.SIN, new List<RoadNodeLocation> { { RoadNodeLocation.WOUT },{ RoadNodeLocation.EOUT }, { RoadNodeLocation.NOUT } }},
+                    {RoadNodeLocation.WIN, new List<RoadNodeLocation> { { RoadNodeLocation.EOUT },{ RoadNodeLocation.SOUT }, { RoadNodeLocation.NOUT } }}
+                }
+            }
         };
     }
 }

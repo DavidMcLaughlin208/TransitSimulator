@@ -40,8 +40,7 @@ public class Setup : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
-                tile.ConnectInterally();
-                tile.ConnectToNeighboringTiles();
+                tile.EstablishNodeConnections();
             }
         }
         Hotel hotel1 = createHotel(new Vector2(gridWidth, gridHeight - 1), Rotation.TWOSEVENTY);
