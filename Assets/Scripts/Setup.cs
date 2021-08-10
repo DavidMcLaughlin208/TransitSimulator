@@ -28,7 +28,7 @@ public class Setup : MonoBehaviour
                 rand = Random.Range(0, roadTypes.Count);
                 tile.roadType = roadTypes[rand];
                 rand = Random.Range(0, rotations.Count);
-                tile.roadRotation = rotations[rand];
+                tile.tileRotation = rotations[rand];
                 tile.x = x;
                 tile.y = y;
                 tile.transform.position = new Vector2(x, y);
@@ -40,6 +40,7 @@ public class Setup : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
+                tile.DisableUnusedRoadNodes();
                 tile.EstablishNodeConnections();
             }
         }

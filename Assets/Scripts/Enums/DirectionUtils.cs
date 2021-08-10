@@ -227,6 +227,30 @@ public class DirectionUtils
             }
         };
 
+        public static Dictionary<RoadNodeLocation, List<Direction>> nodeExternalConnectionDirections = new Dictionary<RoadNodeLocation, List<Direction>>()
+        {
+            {RoadNodeLocation.NOUT, new List<Direction>() {Direction.NORTH}},
+            {RoadNodeLocation.EOUT, new List<Direction>() {Direction.EAST}},
+            {RoadNodeLocation.SOUT, new List<Direction>() {Direction.SOUTH}},
+            {RoadNodeLocation.WOUT, new List<Direction>() {Direction.WEST}},
+        };
+
+        public static Dictionary<Direction, Dictionary<RoadNodeLocation, RoadNodeLocation>> externalConnectionMapping = new Dictionary<Direction, Dictionary<RoadNodeLocation, RoadNodeLocation>>()
+        {
+            {
+                Direction.NORTH, new Dictionary<RoadNodeLocation, RoadNodeLocation>() { { RoadNodeLocation.NOUT, RoadNodeLocation.SIN } }
+            },
+            {
+                Direction.EAST, new Dictionary<RoadNodeLocation, RoadNodeLocation>() { { RoadNodeLocation.EOUT, RoadNodeLocation.WIN } }
+            },
+            {
+                Direction.SOUTH, new Dictionary<RoadNodeLocation, RoadNodeLocation>() { { RoadNodeLocation.SOUT, RoadNodeLocation.NIN } }
+            },
+            {
+                Direction.WEST, new Dictionary<RoadNodeLocation, RoadNodeLocation>() { { RoadNodeLocation.WOUT, RoadNodeLocation.EIN } }
+            }
+        };
+
         public static RoadNodeLocation Rotate(RoadNodeLocation location, Rotation rotation)
         {
             return rotationMapping[rotation][location];
@@ -283,6 +307,23 @@ public class DirectionUtils
                 }
             },
         };
+
+        public static Dictionary<RoadType, List<RoadNodeLocation>> disabledNodeMapping = new Dictionary<RoadType, List<RoadNodeLocation>>()
+        {
+            {
+                RoadType.Straight, new List<RoadNodeLocation> { {RoadNodeLocation.NIN}, {RoadNodeLocation.NOUT}, {RoadNodeLocation.SIN}, {RoadNodeLocation.SOUT} }
+            },
+            {
+                RoadType.Intersection, new List<RoadNodeLocation> { }
+            },
+            {
+                RoadType.TJunction, new List<RoadNodeLocation> { {RoadNodeLocation.NIN}, {RoadNodeLocation.NOUT} }
+            },
+            {
+                RoadType.Corner, new List<RoadNodeLocation> { {RoadNodeLocation.NIN}, {RoadNodeLocation.NOUT}, {RoadNodeLocation.WIN}, {RoadNodeLocation.WOUT} }
+            },
+        };
     }
+    
 }
 

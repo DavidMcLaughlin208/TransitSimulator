@@ -6,7 +6,7 @@ public class Tile : MonoBehaviour
 {
     Setup setup;
     public RoadType roadType;
-    public Rotation roadRotation;
+    public Rotation tileRotation;
     public GameObject pedTL;
     public GameObject pedTR;
     public GameObject pedBR;
@@ -26,6 +26,7 @@ public class Tile : MonoBehaviour
     public int y;
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
+    //public HashSet<RoadNodeLocation> disabledRoadNodes = new HashSet<RoadNodeLocation>();
 
     void Awake()
     {
@@ -77,6 +78,7 @@ public class Tile : MonoBehaviour
         ConnectPedestrianNodesInterally();
         ConnectPedestrianNodesExternally();
         ConnectRoadNodesInternally();
+        ConnectRoadNodesExternally();
     }
 
     public void ConnectPedestrianNodesInterally()
@@ -85,12 +87,12 @@ public class Tile : MonoBehaviour
         for (int i = 0; i < allLocations.Count; i++)
         {
             PedestrianNodeLocation location = allLocations[i];
-            Node currentNode = pedNodeMap[DirectionUtils.PedestrianUtils.Rotate(location, roadRotation)];
+            Node currentNode = pedNodeMap[DirectionUtils.PedestrianUtils.Rotate(location, tileRotation)];
             List<PedestrianNodeLocation> desiredConnectionLocations = DirectionUtils.PedestrianUtils.internalConnectionMapping[roadType][location];
             for (int j = 0; j < desiredConnectionLocations.Count; j++)
             {
                 PedestrianNodeLocation connectionLocation = desiredConnectionLocations[j];
-                Node nodeToConnect = pedNodeMap[DirectionUtils.PedestrianUtils.Rotate(connectionLocation, roadRotation)];
+                Node nodeToConnect = pedNodeMap[DirectionUtils.PedestrianUtils.Rotate(connectionLocation, tileRotation)];
                 nodeToConnect.connections.Add(currentNode);
             }
         }
@@ -110,7 +112,7 @@ public class Tile : MonoBehaviour
                 Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                 if (neighboringTile != null)
                 {
-                    neighboringTile.ReceiveConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<Node>());
+                    neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
                 }
             }
         }
@@ -122,14 +124,14 @@ public class Tile : MonoBehaviour
         for (int i = 0; i < allRoadLocations.Count; i++)
         {
             RoadNodeLocation location = allRoadLocations[i];
-            Node currentNode = roadNodeMap[DirectionUtils.RoadUtils.Rotate(location, roadRotation)];
+            Node currentNode = roadNodeMap[DirectionUtils.RoadUtils.Rotate(location, tileRotation)];
             if (DirectionUtils.RoadUtils.internalConnectionMapping[roadType].ContainsKey(location))
             {
                 List<RoadNodeLocation> desiredConnectionLocations = DirectionUtils.RoadUtils.internalConnectionMapping[roadType][location];
                 for (int j = 0; j < desiredConnectionLocations.Count; j++)
                 {
                     RoadNodeLocation connectionLocation = desiredConnectionLocations[j];
-                    Node nodeToConnect = roadNodeMap[DirectionUtils.RoadUtils.Rotate(connectionLocation, roadRotation)];
+                    Node nodeToConnect = roadNodeMap[DirectionUtils.RoadUtils.Rotate(connectionLocation, tileRotation)];
                     currentNode.connections.Add(nodeToConnect);
 
                 }
@@ -137,9 +139,57 @@ public class Tile : MonoBehaviour
         }
     }
 
+    public void ConnectRoadNodesExternally()
+    {
+        List<RoadNodeLocation> allLocations = new List<RoadNodeLocation>(roadNodeMap.Keys);
+        for (int i = 0; i < allLocations.Count; i++)
+        {
+            RoadNodeLocation location = allLocations[i];
+            RoadNode currentRoadNode = roadNodeMap[location].GetComponent<RoadNode>();
+            if (currentRoadNode.disabled)
+            {
+                continue;
+            }
+            if (DirectionUtils.RoadUtils.nodeExternalConnectionDirections.ContainsKey(location))
+            {
+                List<Direction> nodeDesiredDirections = DirectionUtils.RoadUtils.nodeExternalConnectionDirections[location];
+                for (int j = 0; j < nodeDesiredDirections.Count; j++)
+                {
+                    Direction dir = nodeDesiredDirections[j];
+                    Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                    if (neighboringTile != null)
+                    {
+                        neighboringTile.ReceiveRoadNodeConnectionAttempt(dir, location, currentRoadNode);
+                    }
+                }
+            }
+        }
+    }
+
+    public void DisableUnusedRoadNodes()
+    {
+        List<RoadNodeLocation> disabledLocations = DirectionUtils.RoadUtils.disabledNodeMapping[roadType];
+        for (int i = 0; i < disabledLocations.Count; i++)
+        {
+            RoadNodeLocation location = disabledLocations[i];
+            RoadNodeLocation rotatedLocation = DirectionUtils.RoadUtils.Rotate(location, tileRotation);
+            roadNodeMap[rotatedLocation].disabled = true;
+        }
+    }
+
+    public void SetAllRoadNodesEnabled()
+    {
+        List<RoadNode> roadNodes = new List<RoadNode>(roadNodeMap.Values);
+        for (int i = 0; i < roadNodes.Count; i++)
+        {
+            RoadNode roadNode = roadNodes[i];
+            roadNode.disabled = false;
+        }
+    }
+
     // Direction is relative to the tile the call is coming from. So if a tile is connecting to another tile
     // to its right the direction would be East
-    public Node ReceiveConnectionAttempt(Direction direction, PedestrianNodeLocation location, Node externalNode)
+    public Node ReceivePedestrianNodeConnectionAttempt(Direction direction, PedestrianNodeLocation location, Node externalNode)
     {
         Dictionary<PedestrianNodeLocation, PedestrianNodeLocation> locationMappingForDirection = DirectionUtils.PedestrianUtils.externalConnectionMapping[direction];
         if (locationMappingForDirection.ContainsKey(location)) {
@@ -152,6 +202,23 @@ public class Tile : MonoBehaviour
                 return nodeToConnect;
             }
         }
+        return null;
+    }
+
+    public Node ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode) 
+    {
+        Dictionary<RoadNodeLocation, RoadNodeLocation> locationMappingForDirection = DirectionUtils.RoadUtils.externalConnectionMapping[direction];
+        if (locationMappingForDirection.ContainsKey(location))
+        {
+            RoadNodeLocation nodeToConnectToLocation = locationMappingForDirection[location];
+            RoadNode roadNodeToConnectTo = roadNodeMap[nodeToConnectToLocation];
+            if (roadNodeToConnectTo.disabled)
+            {
+                return null;
+            }
+            externalNode.connections.Add(roadNodeToConnectTo);
+        }
+
         return null;
     }
 
