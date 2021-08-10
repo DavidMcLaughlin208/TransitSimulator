@@ -59,6 +59,8 @@ public class Tile : MonoBehaviour
         roadNodeMap[RoadNodeLocation.WIN].location = RoadNodeLocation.WIN;
         roadNodeMap[RoadNodeLocation.WOUT].location = RoadNodeLocation.WOUT;
 
+        
+
     }
 
     // Start is called before the first frame update

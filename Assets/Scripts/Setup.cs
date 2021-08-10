@@ -35,12 +35,21 @@ public class Setup : MonoBehaviour
                 row.Add(tile);
             }
         }
+
+
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
                 tile.DisableUnusedRoadNodes();
+            }
+        }
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Tile tile = getTile(new Vector2(x, y));
                 tile.EstablishNodeConnections();
             }
         }
