@@ -74,11 +74,12 @@ public class DirectionUtils
         }
     };
 
-    public static Dictionary<Direction, Vector2> directionToCoordinates = new Dictionary<Direction, Vector2>() {
+    public static Dictionary<Direction, Vector2> directionToCoordinatesMapping = new Dictionary<Direction, Vector2>() {
         {Direction.NORTH, Vector2.up}, {Direction.EAST, Vector2.right}, {Direction.SOUTH, Vector2.down}, {Direction.WEST, Vector2.left}
     };
 
-    public static Dictionary<Direction, Dictionary<NodeLocation, NodeLocation>> connectionMapping = new Dictionary<Direction, Dictionary<NodeLocation, NodeLocation>>()
+    // When a tile receives a connection attempt from another tile this mapping is referenced to determine which internal pedestrian node should be connected
+    public static Dictionary<Direction, Dictionary<NodeLocation, NodeLocation>> externalConnectionMapping = new Dictionary<Direction, Dictionary<NodeLocation, NodeLocation>>()
     {
         {Direction.NORTH, new Dictionary<NodeLocation, NodeLocation>() { {NodeLocation.TR, NodeLocation.BR}, {NodeLocation.TL, NodeLocation.BL} } },
         {Direction.EAST, new Dictionary<NodeLocation, NodeLocation>() { {NodeLocation.TR, NodeLocation.TL}, {NodeLocation.BR, NodeLocation.BL} } },
@@ -86,7 +87,8 @@ public class DirectionUtils
         {Direction.WEST, new Dictionary<NodeLocation, NodeLocation>() { {NodeLocation.TL, NodeLocation.TR}, {NodeLocation.BL, NodeLocation.BR} } }
     };
 
-    public static Dictionary<NodeLocation, List<Direction>> nodeConnectionDirections = new Dictionary<NodeLocation, List<Direction>>()
+    // nodeExternalConnectionDirections is referenced when pedestrian nodes attempt to connect to nodes in adjacent tiles
+    public static Dictionary<NodeLocation, List<Direction>> nodeExternalConnectionDirections = new Dictionary<NodeLocation, List<Direction>>()
     {
         {NodeLocation.TR, new List<Direction>() {Direction.NORTH, Direction.EAST}},
         {NodeLocation.TL, new List<Direction>() {Direction.NORTH, Direction.WEST}},
@@ -94,6 +96,7 @@ public class DirectionUtils
         {NodeLocation.BL, new List<Direction>() {Direction.SOUTH, Direction.WEST}},
     };
 
+    // internalConnectionMapping is referenced when connecting pedestrian nodes within the same tile based on roadtype
     public static Dictionary<RoadType, Dictionary<NodeLocation, List<NodeLocation>>> internalConnectionMapping = new Dictionary<RoadType, Dictionary<NodeLocation, List<NodeLocation>>>()
     {
         {
@@ -131,6 +134,13 @@ public class DirectionUtils
 
     };
 
+    public static NodeLocation Rotate(NodeLocation location, Rotation rotation)
+    {
+        return rotationMapping[rotation][location];
+    }
+
+    // rotationMapping is referenced when connecting internal pedestrian nodes and the tile is rotated at any of the four specified angles
+    // This translates the node locations so the mappings in internalConnectionMapping connect the correct nodes
     public static Dictionary<Rotation, Dictionary<NodeLocation, NodeLocation>> rotationMapping = new Dictionary<Rotation, Dictionary<NodeLocation, NodeLocation>>()
     {
         {

@@ -51,14 +51,7 @@ public class Setup : MonoBehaviour
         createShop(ShopType.TEA, new Vector2(-1, gridHeight - 1), Rotation.NINETY);
         createShop(ShopType.BEER, new Vector2(gridWidth, 0), Rotation.TWOSEVENTY);
 
-        for (int y = 0; y < gridHeight; y++)
-        {
-            for (int x = 0; x < gridWidth; x++)
-            {
-                Tile tile = getTile(new Vector2(x, y));
-                tile.RecalculateNodeLines();
-            }
-        }
+        
         List<ShopType> shopTypes = new List<ShopType>() { ShopType.COFEE, ShopType.TEA, ShopType.BEER };
         for (int i = 0; i < 10; i++)
         {
@@ -69,9 +62,6 @@ public class Setup : MonoBehaviour
             hotel3.SpawnPedestrian(type);
 
         }
-        hotel1.SpawnPedestrian(ShopType.COFEE);
-        hotel1.SpawnPedestrian(ShopType.TEA);
-
     }
 
     // Update is called once per frame

@@ -64,11 +64,11 @@ public class Tile : MonoBehaviour
         for (int i = 0; i < allLocations.Count; i++)
         {
             NodeLocation location = allLocations[i];
-            List<Direction> nodeDesiredDirections = DirectionUtils.nodeConnectionDirections[location];
+            List<Direction> nodeDesiredDirections = DirectionUtils.nodeExternalConnectionDirections[location];
             for (int j = 0; j < nodeDesiredDirections.Count; j++)
             {
                 Direction dir = nodeDesiredDirections[j];
-                Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinates[dir]);
+                Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                 if (neighboringTile != null)
                 {
                     neighboringTile.ReceiveConnectionAttempt(dir, location, nodeMap[location].GetComponent<Node>());
@@ -78,15 +78,17 @@ public class Tile : MonoBehaviour
 
     }
 
-    public Node ReceiveConnectionAttempt(Direction direction, NodeLocation location, Node node)
+    // Direction is relative to the tile the call is coming from. So if a tile is connecting to another tile
+    // to its right the direction would be East
+    public Node ReceiveConnectionAttempt(Direction direction, NodeLocation location, Node externalNode)
     {
-        Dictionary<NodeLocation, NodeLocation> locationMapping = DirectionUtils.connectionMapping[direction];
-        if (locationMapping.ContainsKey(location)) {
-            NodeLocation connectLocation = locationMapping[location];
-            if (nodeMap.ContainsKey(connectLocation))
+        Dictionary<NodeLocation, NodeLocation> locationMappingForDirection = DirectionUtils.externalConnectionMapping[direction];
+        if (locationMappingForDirection.ContainsKey(location)) {
+            NodeLocation nodeToConnectToLocation = locationMappingForDirection[location];
+            if (nodeMap.ContainsKey(nodeToConnectToLocation))
             {
-                Node nodeToConnect = nodeMap[connectLocation];
-                nodeToConnect.connections.Add(node);
+                Node nodeToConnect = nodeMap[nodeToConnectToLocation];
+                nodeToConnect.connections.Add(externalNode);
                 nodeToConnect.RecalculateLinePos();
                 return nodeToConnect;
             }

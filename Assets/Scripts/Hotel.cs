@@ -44,13 +44,13 @@ public class Hotel : Building
     public void ConnectToStreets()
     {
         Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
-        Vector2 offset = DirectionUtils.directionToCoordinates[dir];
+        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir];
         Tile neighboringTile = setup.getTile((Vector2)transform.position + offset);
         if (neighboringTile != null)
         {
-            Node otherNode = neighboringTile.ReceiveConnectionAttempt(dir, Rotate(entranceNode.location), entranceNode);
+            Node otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.Rotate(entranceNode.location, rotation), entranceNode);
             entranceNode.connections.Add(otherNode);
-            otherNode = neighboringTile.ReceiveConnectionAttempt(dir, Rotate(exitNode.location), exitNode);
+            otherNode = neighboringTile.ReceiveConnectionAttempt(dir, DirectionUtils.Rotate(exitNode.location, rotation), exitNode);
             exitNode.connections.Add(otherNode);
 
         }
@@ -65,11 +65,6 @@ public class Hotel : Building
         pedestrian.homeNode = entranceNode;
         pedestrian.desiredShopType = shopType;
         pedestrian.CalculateItinerary();
-    }
-
-    private NodeLocation Rotate(NodeLocation location)
-    {
-        return DirectionUtils.rotationMapping[rotation][location];
     }
 
     public override void ReceivePedestrian(Pedestrian pedestrian)
