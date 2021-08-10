@@ -11,16 +11,16 @@ public class Shop : Building
     public Rotation rotation;
     public GameObject exit;
     public GameObject entrance;
-    public Node exitNode;
-    public Node entranceNode;
+    public PedestrianNode exitNode;
+    public PedestrianNode entranceNode;
     public ShopType shopType = ShopType.NONE;
     // Start is called before the first frame update
     void Awake()
     {
         setup = GameObject.Find("Setup").GetComponent<Setup>();
-        exitNode = exit.GetComponent<Node>();
+        exitNode = exit.GetComponent<PedestrianNode>();
         exitNode.location = PedestrianNodeLocation.TL;
-        entranceNode = entrance.GetComponent<Node>();
+        entranceNode = entrance.GetComponent<PedestrianNode>();
         entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.owningBuilding = this;
     }

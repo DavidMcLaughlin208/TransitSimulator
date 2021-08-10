@@ -10,8 +10,8 @@ public class Hotel : Building
     public Rotation rotation;
     public GameObject exit;
     public GameObject entrance;
-    public Node exitNode;
-    public Node entranceNode;
+    public PedestrianNode exitNode;
+    public PedestrianNode entranceNode;
     public List<Pedestrian> presentOccupants = new List<Pedestrian>();
     public List<Pedestrian> allOccupants = new List<Pedestrian>();
     public GameObject pedestrianPrefab;
@@ -20,10 +20,10 @@ public class Hotel : Building
     void Awake()
     {
         setup = GameObject.Find("Setup").GetComponent<Setup>();
-        exitNode = exit.GetComponent<Node>();
+        exitNode = exit.GetComponent<PedestrianNode>();
         exitNode.location = PedestrianNodeLocation.TL;
         exitNode.shopType = ShopType.NONE;
-        entranceNode = entrance.GetComponent<Node>();
+        entranceNode = entrance.GetComponent<PedestrianNode>();
         entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.shopType = ShopType.NONE;
         entranceNode.owningBuilding = this;

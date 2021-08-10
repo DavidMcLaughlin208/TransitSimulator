@@ -12,21 +12,52 @@ public class Tile : MonoBehaviour
     public GameObject pedBR;
     public GameObject pedBL;
 
+    public GameObject roadNIN;
+    public GameObject roadNOUT;
+    public GameObject roadEIN;
+    public GameObject roadEOUT;
+    public GameObject roadSIN;
+    public GameObject roadSOUT;
+    public GameObject roadWIN;
+    public GameObject roadWOUT;
+
+
     public int x;
     public int y;
-    public Dictionary<PedestrianNodeLocation, Node> pedNodeMap = new Dictionary<PedestrianNodeLocation, Node>();
+    public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
+    public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
     void Awake()
     {
         setup = GameObject.Find("Setup").GetComponent<Setup>();
-        pedNodeMap.Add(PedestrianNodeLocation.TL, pedTL.GetComponent<Node>());
-        pedNodeMap.Add(PedestrianNodeLocation.TR, pedTR.GetComponent<Node>());
-        pedNodeMap.Add(PedestrianNodeLocation.BL, pedBL.GetComponent<Node>());
-        pedNodeMap.Add(PedestrianNodeLocation.BR, pedBR.GetComponent<Node>());
-        pedTL.GetComponent<Node>().location = PedestrianNodeLocation.TL;
-        pedTR.GetComponent<Node>().location = PedestrianNodeLocation.TR;
-        pedBR.GetComponent<Node>().location = PedestrianNodeLocation.BR;
-        pedBL.GetComponent<Node>().location = PedestrianNodeLocation.BL;
+        // Setup pedestrian node locations and mapping
+        pedNodeMap.Add(PedestrianNodeLocation.TL, pedTL.GetComponent<PedestrianNode>());
+        pedNodeMap.Add(PedestrianNodeLocation.TR, pedTR.GetComponent<PedestrianNode>());
+        pedNodeMap.Add(PedestrianNodeLocation.BL, pedBL.GetComponent<PedestrianNode>());
+        pedNodeMap.Add(PedestrianNodeLocation.BR, pedBR.GetComponent<PedestrianNode>());
+        pedTL.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.TL;
+        pedTR.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.TR;
+        pedBR.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.BR;
+        pedBL.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.BL;
+
+        // Setup road node locations and mapping
+        roadNodeMap.Add(RoadNodeLocation.NIN, roadNIN.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.NOUT, roadNOUT.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.EIN, roadEIN.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.EOUT, roadEOUT.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.SIN, roadSIN.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.SOUT, roadSOUT.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.WIN, roadWIN.GetComponent<RoadNode>());
+        roadNodeMap.Add(RoadNodeLocation.WOUT, roadWOUT.GetComponent<RoadNode>());
+        roadNodeMap[RoadNodeLocation.NIN].location = RoadNodeLocation.NIN;
+        roadNodeMap[RoadNodeLocation.NOUT].location = RoadNodeLocation.NOUT;
+        roadNodeMap[RoadNodeLocation.EIN].location = RoadNodeLocation.EIN;
+        roadNodeMap[RoadNodeLocation.EOUT].location = RoadNodeLocation.EOUT;
+        roadNodeMap[RoadNodeLocation.SIN].location = RoadNodeLocation.SIN;
+        roadNodeMap[RoadNodeLocation.SOUT].location = RoadNodeLocation.SOUT;
+        roadNodeMap[RoadNodeLocation.WIN].location = RoadNodeLocation.WIN;
+        roadNodeMap[RoadNodeLocation.WOUT].location = RoadNodeLocation.WOUT;
+
     }
 
     // Start is called before the first frame update
@@ -107,6 +138,6 @@ public class Tile : MonoBehaviour
             currentNode.RecalculateLinePos();
         }
     }
-
+    
 
 }
