@@ -14,6 +14,11 @@ public static class Utils {
         return list.OrderBy(i => rnd.Next()).Take(number).ToList();
     }
 
+    public static T AddAndGetComponent<T>(this GameObject parent) where T : Component {
+        parent.AddComponent<T>();
+        return parent.GetComponent<T>();
+    }
+
     public static void assignSpriteFromPath(this GameObject gameObj, string path) {
         gameObj.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(path);
     }

@@ -58,21 +58,18 @@ public class Tile : MonoBehaviour
         roadNodeMap[RoadNodeLocation.SOUT].location = RoadNodeLocation.SOUT;
         roadNodeMap[RoadNodeLocation.WIN].location = RoadNodeLocation.WIN;
         roadNodeMap[RoadNodeLocation.WOUT].location = RoadNodeLocation.WOUT;
-
-        
-
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void EstablishNodeConnections()
@@ -207,7 +204,7 @@ public class Tile : MonoBehaviour
         return null;
     }
 
-    public Node ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode) 
+    public Node ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode)
     {
         Dictionary<RoadNodeLocation, RoadNodeLocation> locationMappingForDirection = DirectionUtils.RoadUtils.externalConnectionMapping[direction];
         if (locationMappingForDirection.ContainsKey(location))
@@ -241,6 +238,6 @@ public class Tile : MonoBehaviour
             currentNode.RecalculateLinePos();
         }
     }
-    
+
 
 }
