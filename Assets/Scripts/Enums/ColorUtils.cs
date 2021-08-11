@@ -6,7 +6,7 @@ static class ColorUtils
 {
     public static Color GetColorForShopType(ShopType shopType)
     {
-        if (shopType == ShopType.COFEE)
+        if (shopType == ShopType.COFFEE)
         {
             return solColors[SolarizedColors.brblack];
         }

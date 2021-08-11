@@ -56,12 +56,12 @@ public class Setup : MonoBehaviour
         Hotel hotel1 = createHotel(new Vector2(gridWidth, gridHeight - 1), Rotation.TWOSEVENTY);
         Hotel hotel2 = createHotel(new Vector2(2, -1), Rotation.ZERO);
         Hotel hotel3 = createHotel(new Vector2(-1, 2), Rotation.NINETY);
-        createShop(ShopType.COFEE, new Vector2(-1, 0), Rotation.NINETY);
+        createShop(ShopType.COFFEE, new Vector2(-1, 0), Rotation.NINETY);
         createShop(ShopType.TEA, new Vector2(-1, gridHeight - 1), Rotation.NINETY);
         createShop(ShopType.BEER, new Vector2(gridWidth, 0), Rotation.TWOSEVENTY);
 
-        
-        List<ShopType> shopTypes = new List<ShopType>() { ShopType.COFEE, ShopType.TEA, ShopType.BEER };
+
+        List<ShopType> shopTypes = new List<ShopType>() { ShopType.COFFEE, ShopType.TEA, ShopType.BEER };
         for (int i = 0; i < 10; i++)
         {
             rand = Random.Range(0, shopTypes.Count);
