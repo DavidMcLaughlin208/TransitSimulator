@@ -2,7 +2,7 @@
 public enum ShopType
 {
     NONE,
-    COFEE,
+    COFFEE,
     TEA,
     BEER
 }
