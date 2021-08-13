@@ -9,11 +9,15 @@ public class Prefabs : MonoBehaviour {
     public GameObject road;
     public GameObject lot;
 
+    public GameObject pedestrian;
+
     void Awake() {
         baseTilemapPrefab = Resources.Load<GameObject>("Prefabs/BaseTilemap");
         levelPrefab = Resources.Load<GameObject>("Prefabs/Levels/Downtown");
 
         road = Resources.Load<GameObject>("Prefabs/CityObjects/Road");
         lot = Resources.Load<GameObject>("Prefabs/CityObjects/Lot");
+
+        pedestrian = Resources.Load<GameObject>("Prefabs/CityObjects/Pedestrian");
     }
 }

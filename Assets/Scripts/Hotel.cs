@@ -2,14 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+// Componentize!
+// Spawner (hotel)
+// Queuer (shop)
+// Destination (shop + landmark + house)
+// Transporter (ferries and trains)
 public class Hotel : Building
 {
-    public Setup setup;
+    Datastore datastore;
+    Prefabs prefabs;
+
     public int x;
     public int y;
     public Rotation rotation;
-    public GameObject exit;
-    public GameObject entrance;
     public PedestrianNode exitNode;
     public PedestrianNode entranceNode;
     public List<Pedestrian> presentOccupants = new List<Pedestrian>();
@@ -19,15 +25,25 @@ public class Hotel : Building
     // Start is called before the first frame update
     void Awake()
     {
-        setup = GameObject.Find("Setup").GetComponent<Setup>();
-        exitNode = exit.GetComponent<PedestrianNode>();
+        datastore = GameObject.Find("God").GetComponent<Datastore>();
+        prefabs = GameObject.Find("God").GetComponent<Prefabs>();
+        exitNode = this.transform.Find("Exit").GetComponent<PedestrianNode>();
         exitNode.location = PedestrianNodeLocation.TL;
         exitNode.shopType = ShopType.NONE;
-        entranceNode = entrance.GetComponent<PedestrianNode>();
+        entranceNode = this.transform.Find("Entrance").GetComponent<PedestrianNode>();
         entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.shopType = ShopType.NONE;
         entranceNode.owningBuilding = this;
+    }
 
+    Tile GetTileFromDatastore(Vector2 coord) {
+        var tileCoord3 = datastore.validTiles.WorldToCell(coord);
+        var tileCoord2 = new Vector2Int(tileCoord3.x, tileCoord3.y);
+        if (datastore.city.ContainsKey(tileCoord2)) {
+            return datastore.city[tileCoord2].nodeTile;
+        } else {
+            return null;
+        }
     }
 
     void Start()
@@ -38,14 +54,14 @@ public class Hotel : Building
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void ConnectToStreets()
     {
         Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
-        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir];
-        Tile neighboringTile = setup.getTile((Vector2)transform.position + offset);
+        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir] * datastore.lotScale * 1.01f / 2f;
+        Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + offset);
         if (neighboringTile != null)
         {
             Node otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(entranceNode.location, rotation), entranceNode);
@@ -58,7 +74,7 @@ public class Hotel : Building
 
     public void SpawnPedestrian(ShopType shopType)
     {
-        GameObject pedestrianObj = Object.Instantiate(pedestrianPrefab, transform);
+        GameObject pedestrianObj = Object.Instantiate(prefabs.pedestrian, transform);
         pedestrianObj.transform.position = exitNode.transform.position;
         Pedestrian pedestrian = pedestrianObj.GetComponent<Pedestrian>();
         pedestrian.currentNode = exitNode;
