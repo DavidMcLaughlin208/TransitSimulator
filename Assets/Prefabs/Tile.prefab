@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roadType: 0
-  roadRotation: 0
+  tileRotation: 0
   pedTL: {fileID: 3931484440945754264}
   pedTR: {fileID: 1675720038064657473}
   pedBR: {fileID: 462362492957058260}

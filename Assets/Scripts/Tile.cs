@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
-    Setup setup;
+    Datastore datastore;
+
     public RoadType roadType;
     public Rotation tileRotation;
     public GameObject pedTL;
@@ -21,16 +22,15 @@ public class Tile : MonoBehaviour
     public GameObject roadWIN;
     public GameObject roadWOUT;
 
-
     public int x;
     public int y;
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
     //public HashSet<RoadNodeLocation> disabledRoadNodes = new HashSet<RoadNodeLocation>();
 
-    void Awake()
+    public void Awake()
     {
-        setup = GameObject.Find("Setup").GetComponent<Setup>();
+        datastore = GameObject.Find("God").GetComponent<Datastore>();
         // Setup pedestrian node locations and mapping
         pedNodeMap.Add(PedestrianNodeLocation.TL, pedTL.GetComponent<PedestrianNode>());
         pedNodeMap.Add(PedestrianNodeLocation.TR, pedTR.GetComponent<PedestrianNode>());
@@ -60,16 +60,14 @@ public class Tile : MonoBehaviour
         roadNodeMap[RoadNodeLocation.WOUT].location = RoadNodeLocation.WOUT;
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+    Tile GetTileFromDatastore(Vector2 coord) {
+        var tileCoord3 = datastore.validTiles.WorldToCell(coord);
+        var tileCoord2 = new Vector2Int(tileCoord3.x, tileCoord3.y);
+        if (datastore.city.ContainsKey(tileCoord2)) {
+            return datastore.city[tileCoord2].nodeTile;
+        } else {
+            return null;
+        }
     }
 
     public void EstablishNodeConnections()
@@ -99,7 +97,6 @@ public class Tile : MonoBehaviour
 
     public void ConnectPedestrianNodesExternally()
     {
-
         List<PedestrianNodeLocation> allLocations = new List<PedestrianNodeLocation>(pedNodeMap.Keys);
         for (int i = 0; i < allLocations.Count; i++)
         {
@@ -108,7 +105,7 @@ public class Tile : MonoBehaviour
             for (int j = 0; j < nodeDesiredDirections.Count; j++)
             {
                 Direction dir = nodeDesiredDirections[j];
-                Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                 if (neighboringTile != null)
                 {
                     neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
@@ -155,7 +152,7 @@ public class Tile : MonoBehaviour
                 for (int j = 0; j < nodeDesiredDirections.Count; j++)
                 {
                     Direction dir = nodeDesiredDirections[j];
-                    Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                    Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                     if (neighboringTile != null)
                     {
                         neighboringTile.ReceiveRoadNodeConnectionAttempt(dir, location, currentRoadNode);
