@@ -323,7 +323,85 @@ public class DirectionUtils
                 RoadType.Corner, new List<RoadNodeLocation> { {RoadNodeLocation.NIN}, {RoadNodeLocation.NOUT}, {RoadNodeLocation.WIN}, {RoadNodeLocation.WOUT} }
             },
         };
+
+        public static Dictionary<Direction[], RoadTypeAndRotation> missingNeighborsToRoadTypeAndOrientationMap = new Dictionary<Direction[], RoadTypeAndRotation>(new ArrayComparer())
+        {
+            {new List<Direction> {{Direction.NORTH}, {Direction.SOUTH} }.ToArray(), new RoadTypeAndRotation(RoadType.Straight, Rotation.ZERO) },
+            {new List<Direction> {{Direction.EAST}, {Direction.WEST} }.ToArray(), new RoadTypeAndRotation(RoadType.Straight, Rotation.NINETY) },
+            {new List<Direction> {{Direction.NORTH}, {Direction.WEST} }.ToArray(), new RoadTypeAndRotation(RoadType.Corner, Rotation.ZERO) },
+            {new List<Direction> {{Direction.NORTH}, {Direction.EAST} }.ToArray(), new RoadTypeAndRotation(RoadType.Corner, Rotation.NINETY) },
+            {new List<Direction> {{Direction.EAST}, {Direction.SOUTH} }.ToArray(), new RoadTypeAndRotation(RoadType.Corner, Rotation.ONEEIGHTY) },
+            {new List<Direction> {{Direction.SOUTH}, {Direction.WEST} }.ToArray(), new RoadTypeAndRotation(RoadType.Corner, Rotation.TWOSEVENTY) },
+            {new List<Direction> {}.ToArray(), new RoadTypeAndRotation(RoadType.Intersection, Rotation.ZERO) },
+            {new List<Direction> {{Direction.NORTH}}.ToArray(), new RoadTypeAndRotation(RoadType.TJunction, Rotation.ZERO) },
+            {new List<Direction> {{Direction.EAST}}.ToArray(), new RoadTypeAndRotation(RoadType.TJunction, Rotation.NINETY) },
+            {new List<Direction> {{Direction.SOUTH}}.ToArray(), new RoadTypeAndRotation(RoadType.TJunction, Rotation.ONEEIGHTY) },
+            {new List<Direction> {{Direction.WEST}}.ToArray(), new RoadTypeAndRotation(RoadType.TJunction, Rotation.TWOSEVENTY) },
+
+        };
+
+        public struct RoadTypeAndRotation {
+            public RoadType roadType;
+            public Rotation rotation;
+
+            public RoadTypeAndRotation(RoadType roadType, Rotation rotation)
+            {
+                this.roadType = roadType;
+                this.rotation = rotation;
+            }
+        }
+
+        public static RoadTypeAndRotation GetRoadTypeAndRotationForMissingNeighbors(List<Direction> missingNeighbors)
+        {
+            missingNeighbors.Sort();
+            return missingNeighborsToRoadTypeAndOrientationMap[missingNeighbors.ToArray()];
+        }
+
+        public static Dictionary<RoadNodeLocation, Vector2> nodeLocationVectors = new Dictionary<RoadNodeLocation, Vector2>()
+        {
+            {RoadNodeLocation.NIN, new Vector2(0, -1)},
+            {RoadNodeLocation.NOUT, new Vector2(0, 1)},
+            {RoadNodeLocation.EIN, new Vector2(-1, 0)},
+            {RoadNodeLocation.EOUT, new Vector2(1, 0)},
+            {RoadNodeLocation.SIN, new Vector2(0, 1)},
+            {RoadNodeLocation.SOUT, new Vector2(0, -1)},
+            {RoadNodeLocation.WIN, new Vector2(1, 0)},
+            {RoadNodeLocation.WOUT, new Vector2(-1, 0)}
+        };
     }
-    
+
+    sealed class ArrayComparer : EqualityComparer<Direction[]>
+    {
+        public override bool Equals(Direction[] x, Direction[] y)
+        {
+            if (x.Length != y.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (x[i] != y[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+          
+
+        public override int GetHashCode(Direction[] obj)
+        {
+            int result = 17;
+            for (int i = 0; i < obj.Length; i++)
+            {
+                unchecked
+                {
+                    result = result * 23 + (int)obj[i];
+                }
+            }
+            return result;
+        }
+    }
+
 }
 

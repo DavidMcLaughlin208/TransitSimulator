@@ -123,6 +123,49 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &942860459
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 942860461}
+  - component: {fileID: 942860460}
+  m_Layer: 0
+  m_Name: God
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &942860460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 942860459}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d99c8d48ddfb4edcbbd95af8ffd7895, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &942860461
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 942860459}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.1466925, y: 1.5907971, z: -1.1950256}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1575230878
 GameObject:
   m_ObjectHideFlags: 0
@@ -155,6 +198,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 9199659175537488764, guid: 8600a3a5bf2424e89aded50380aa94b3, type: 3}
   hotelPrefab: {fileID: 4388632035459780108, guid: d66a7878d06284b0cb42123b5608d741, type: 3}
   shopPrefab: {fileID: 517778743281740699, guid: c33aaf80f159b43fb8fd7ced1d51fd8f, type: 3}
+  carPrefab: {fileID: 6182328287924201665, guid: d96eaa6cde0824d5fb8fec07bd119997, type: 3}
   gridHeight: 5
   gridWidth: 5
 --- !u!4 &1575230880

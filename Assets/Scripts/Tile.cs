@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Tile : MonoBehaviour
 {
     Datastore datastore;
+    Setup setup;
 
     public RoadType roadType;
     public Rotation tileRotation;
@@ -30,7 +32,8 @@ public class Tile : MonoBehaviour
 
     public void Awake()
     {
-        datastore = GameObject.Find("God").GetComponent<Datastore>();
+        //datastore = GameObject.Find("God").GetComponent<Datastore>();
+        setup = GameObject.Find("Setup").GetComponent<Setup>();
         // Setup pedestrian node locations and mapping
         pedNodeMap.Add(PedestrianNodeLocation.TL, pedTL.GetComponent<PedestrianNode>());
         pedNodeMap.Add(PedestrianNodeLocation.TR, pedTR.GetComponent<PedestrianNode>());
@@ -105,7 +108,8 @@ public class Tile : MonoBehaviour
             for (int j = 0; j < nodeDesiredDirections.Count; j++)
             {
                 Direction dir = nodeDesiredDirections[j];
-                Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                //Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                 if (neighboringTile != null)
                 {
                     neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
@@ -152,7 +156,8 @@ public class Tile : MonoBehaviour
                 for (int j = 0; j < nodeDesiredDirections.Count; j++)
                 {
                     Direction dir = nodeDesiredDirections[j];
-                    Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                    //Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                    Tile neighboringTile = setup.getTile((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                     if (neighboringTile != null)
                     {
                         neighboringTile.ReceiveRoadNodeConnectionAttempt(dir, location, currentRoadNode);
@@ -234,6 +239,17 @@ public class Tile : MonoBehaviour
             Node currentNode = roadNodeMap[location];
             currentNode.RecalculateLinePos();
         }
+
+        
+    }
+
+    public void CalculateRoadType(Dictionary<Direction, bool> neighbors)
+    {
+        List<Direction> missingTiles = new List<Direction>(neighbors.Keys).Where(key => !neighbors[key]).ToList();
+
+        DirectionUtils.RoadUtils.RoadTypeAndRotation roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingTiles);
+        this.roadType = roadTypeAndRotation.roadType;
+        this.tileRotation = roadTypeAndRotation.rotation;
     }
 
 

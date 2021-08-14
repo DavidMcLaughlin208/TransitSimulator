@@ -9,6 +9,7 @@ public class Setup : MonoBehaviour
     public GameObject tilePrefab;
     public GameObject hotelPrefab;
     public GameObject shopPrefab;
+    public GameObject carPrefab;
     public int gridHeight = 5;
     public int gridWidth = 5;
     // Start is called before the first frame update
@@ -23,16 +24,39 @@ public class Setup : MonoBehaviour
             tileGrid.Add(row);
             for (int x = 0; x < gridWidth; x++)
             {
+                if (!(y % 2 == 0) && !(x % 2 == 0))
+                {
+                    row.Add(null);
+                    continue;
+                }
                 GameObject tileObj = Object.Instantiate(tilePrefab, transform);
                 Tile tile = tileObj.GetComponent<Tile>();
                 rand = Random.Range(0, roadTypes.Count);
-                tile.roadType = roadTypes[rand];
+                //tile.roadType = RoadType.Intersection;//roadTypes[rand];
                 rand = Random.Range(0, rotations.Count);
-                tile.tileRotation = rotations[rand];
+                //tile.tileRotation = rotations[rand];
                 tile.x = x;
                 tile.y = y;
                 tile.transform.position = new Vector2(x, y);
                 row.Add(tile);
+                
+            }
+        }
+
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Tile tile = getTile(new Vector2(x, y));
+                if (tile != null)
+                {
+                    Dictionary<Direction, bool> neighbors = new Dictionary<Direction, bool>();
+                    neighbors.Add(Direction.NORTH, getTile(new Vector2(x, y + 1)) != null);
+                    neighbors.Add(Direction.EAST, getTile(new Vector2(x + 1, y)) != null);
+                    neighbors.Add(Direction.SOUTH, getTile(new Vector2(x, y - 1)) != null);
+                    neighbors.Add(Direction.WEST, getTile(new Vector2(x - 1, y)) != null);
+                    tile.CalculateRoadType(neighbors);
+                }
             }
         }
 
@@ -42,7 +66,10 @@ public class Setup : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
-                tile.DisableUnusedRoadNodes();
+                if (tile != null)
+                {
+                    tile.DisableUnusedRoadNodes();
+                }
             }
         }
         for (int y = 0; y < gridHeight; y++)
@@ -50,7 +77,25 @@ public class Setup : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
+                if(tile == null) { continue; }
                 tile.EstablishNodeConnections();
+
+                if (Random.Range(0, 10) > 7)
+                {
+                    Node roadNode = tile.roadNodeMap[RoadNodeLocation.EIN];
+                    GameObject carObj = Object.Instantiate(carPrefab, transform);
+                    carObj.transform.position = roadNode.transform.position;
+                    Car car = carObj.GetComponent<Car>();
+                    car.currentNode = roadNode;
+                    car.homeNode = roadNode;
+                    car.desiredShopType = ShopType.COFFEE;
+                }
+
+                if (Random.Range(0, 10) > 7)
+                {
+                    Node roadNode = tile.roadNodeMap[RoadNodeLocation.SOUT];
+                    roadNode.shopType = ShopType.COFFEE;
+                }
             }
         }
         Hotel hotel1 = createHotel(new Vector2(gridWidth, gridHeight - 1), Rotation.TWOSEVENTY);
@@ -69,7 +114,6 @@ public class Setup : MonoBehaviour
             hotel1.SpawnPedestrian(type);
             hotel2.SpawnPedestrian(type);
             hotel3.SpawnPedestrian(type);
-
         }
     }
 
@@ -81,7 +125,10 @@ public class Setup : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Tile tile = getTile(new Vector2(x, y));
-                tile.RecalculateNodeLines();
+                if (tile != null)
+                {
+                    tile.RecalculateNodeLines();
+                }
             }
         }
     }
