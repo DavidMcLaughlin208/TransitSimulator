@@ -80,14 +80,14 @@ public class Setup : MonoBehaviour
                 if(tile == null) { continue; }
                 tile.EstablishNodeConnections();
 
-                if (Random.Range(0, 10) > 7)
+                if (Random.Range(0, 10) > 4)
                 {
                     Node roadNode = tile.roadNodeMap[RoadNodeLocation.EIN];
                     GameObject carObj = Object.Instantiate(carPrefab, transform);
                     carObj.transform.position = roadNode.transform.position;
                     Car car = carObj.GetComponent<Car>();
-                    car.currentNode = roadNode;
-                    car.homeNode = roadNode;
+                    car.SetNewCurrentNode((RoadNode)roadNode);
+                    car.homeNode = (RoadNode)roadNode;
                     car.desiredShopType = ShopType.COFFEE;
                 }
 
