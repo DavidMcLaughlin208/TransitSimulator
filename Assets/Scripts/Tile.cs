@@ -24,6 +24,8 @@ public class Tile : MonoBehaviour
     public GameObject roadWIN;
     public GameObject roadWOUT;
 
+    public List<Car> intersectionQueue = new List<Car>();
+
     public int x;
     public int y;
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
@@ -39,10 +41,10 @@ public class Tile : MonoBehaviour
         pedNodeMap.Add(PedestrianNodeLocation.TR, pedTR.GetComponent<PedestrianNode>());
         pedNodeMap.Add(PedestrianNodeLocation.BL, pedBL.GetComponent<PedestrianNode>());
         pedNodeMap.Add(PedestrianNodeLocation.BR, pedBR.GetComponent<PedestrianNode>());
-        pedTL.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.TL;
-        pedTR.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.TR;
-        pedBR.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.BR;
-        pedBL.GetComponent<PedestrianNode>().location = PedestrianNodeLocation.BL;
+        pedNodeMap[PedestrianNodeLocation.TL].location = PedestrianNodeLocation.TL;
+        pedNodeMap[PedestrianNodeLocation.TR].location = PedestrianNodeLocation.TR;
+        pedNodeMap[PedestrianNodeLocation.BR].location = PedestrianNodeLocation.BR;
+        pedNodeMap[PedestrianNodeLocation.BL].location = PedestrianNodeLocation.BL;
 
         // Setup road node locations and mapping
         roadNodeMap.Add(RoadNodeLocation.NIN, roadNIN.GetComponent<RoadNode>());
@@ -250,6 +252,29 @@ public class Tile : MonoBehaviour
         DirectionUtils.RoadUtils.RoadTypeAndRotation roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingTiles);
         this.roadType = roadTypeAndRotation.roadType;
         this.tileRotation = roadTypeAndRotation.rotation;
+    }
+
+    public void PlaceCarInIntersectionQueue(Car car)
+    {
+        if (intersectionQueue.IndexOf(car) == -1)
+        {
+            intersectionQueue.Add(car);
+        }
+    }
+
+    public void RemoveCarFromIntersectionQueue(Car car)
+    {
+        intersectionQueue.Remove(car);
+    }
+
+    public bool IsCarClearedForIntersection(Car car)
+    {
+        return intersectionQueue.IndexOf(car) == 0;        
+    }
+
+    public bool IsIntersection()
+    {
+        return roadType == RoadType.Intersection || roadType == RoadType.TJunction;
     }
 
 
