@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Shop : Building
+public class Shop : MonoBehaviour
 {
     Datastore datastore;
     Prefabs prefabs;
@@ -23,13 +23,13 @@ public class Shop : Building
         exitNode.location = PedestrianNodeLocation.TL;
         entranceNode = this.transform.Find("Entrance").GetComponent<PedestrianNode>();
         entranceNode.location = PedestrianNodeLocation.TR;
-        entranceNode.owningBuilding = this;
+        entranceNode.owningBuilding = this.GetComponent<Building>();
     }
 
     void Start()
     {
         this.transform.rotation = Quaternion.Euler(0, 0, DirectionUtils.directionToIntMapping[rotation]);
-        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(shopType);
+        // GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(shopType);
     }
 
     // Update is called once per frame
@@ -66,10 +66,10 @@ public class Shop : Building
     public void setShopType(ShopType shopType)
     {
         this.shopType = shopType;
-        entranceNode.shopType = shopType;
+        // entranceNode.shopType = shopType;
     }
 
-    public override void ReceivePedestrian(Pedestrian pedestrian)
+    public void ReceivePedestrian(Pedestrian pedestrian)
     {
         pedestrian.currentNode = this.exitNode;
         pedestrian.transform.position = this.exitNode.transform.position;

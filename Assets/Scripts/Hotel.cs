@@ -8,7 +8,7 @@ using UnityEngine;
 // Queuer (shop)
 // Destination (shop + landmark + house)
 // Transporter (ferries and trains)
-public class Hotel : Building
+public class Hotel : MonoBehaviour
 {
     Datastore datastore;
     Prefabs prefabs;
@@ -29,11 +29,11 @@ public class Hotel : Building
         prefabs = GameObject.Find("God").GetComponent<Prefabs>();
         exitNode = this.transform.Find("Exit").GetComponent<PedestrianNode>();
         exitNode.location = PedestrianNodeLocation.TL;
-        exitNode.shopType = ShopType.NONE;
+        // exitNode.shopType = ShopType.NONE;
         entranceNode = this.transform.Find("Entrance").GetComponent<PedestrianNode>();
         entranceNode.location = PedestrianNodeLocation.TR;
-        entranceNode.shopType = ShopType.NONE;
-        entranceNode.owningBuilding = this;
+        // entranceNode.shopType = ShopType.NONE;
+        entranceNode.owningBuilding = this.GetComponent<Building>();
     }
 
     Tile GetTileFromDatastore(Vector2 coord) {
@@ -72,18 +72,18 @@ public class Hotel : Building
         }
     }
 
-    public void SpawnPedestrian(ShopType shopType)
+    public void SpawnPedestrian(DestinationType destinationType)
     {
         GameObject pedestrianObj = Object.Instantiate(prefabs.pedestrian, transform);
         pedestrianObj.transform.position = exitNode.transform.position;
         Pedestrian pedestrian = pedestrianObj.GetComponent<Pedestrian>();
         pedestrian.currentNode = exitNode;
         pedestrian.homeNode = entranceNode;
-        pedestrian.desiredShopType = shopType;
+        pedestrian.desiredDestType = destinationType;
         pedestrian.CalculateItinerary();
     }
 
-    public override void ReceivePedestrian(Pedestrian pedestrian)
+    public void ReceivePedestrian(Pedestrian pedestrian)
     {
         pedestrian.transform.position = this.exitNode.transform.position;
         pedestrian.headingHome = false;

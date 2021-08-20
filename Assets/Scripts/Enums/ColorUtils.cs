@@ -4,17 +4,17 @@ using System.Collections.Generic;
 
 static class ColorUtils
 {
-    public static Color GetColorForShopType(ShopType shopType)
+    public static Color GetColorForDestType(DestinationType destType)
     {
-        if (shopType == ShopType.COFFEE)
+        if (destType == DestinationType.COFFEE)
         {
             return solColors[SolarizedColors.brblack];
         }
-        else if (shopType == ShopType.TEA)
+        else if (destType == DestinationType.TEA)
         {
             return solColors[SolarizedColors.brmagenta];
         }
-        else if (shopType == ShopType.BEER)
+        else if (destType == DestinationType.BEER)
         {
             return solColors[SolarizedColors.brcyan];
         }

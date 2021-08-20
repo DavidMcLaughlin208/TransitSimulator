@@ -7,14 +7,14 @@ public class Pedestrian : MonoBehaviour
     public Node homeNode;
     public Node currentNode;
     public List<Node> itinerary = new List<Node>();
-    public ShopType desiredShopType;
+    public DestinationType desiredDestType;
     public float speed = 0.1f;
     public bool headingHome = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(desiredShopType);
+        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
     }
 
     // Update is called once per frame
@@ -26,18 +26,11 @@ public class Pedestrian : MonoBehaviour
             float step = speed * Time.deltaTime; // calculate distance to move
             transform.position = Vector2.MoveTowards(transform.position, target.transform.position, step);
             if (Vector2.Distance(transform.position, target.transform.position) < 0.05)
-            {                
+            {
                 currentNode = target;
                 itinerary.RemoveAt(0);
                 if (itinerary.Count == 0) {
-                    if (!headingHome && ((Shop)currentNode.owningBuilding).shopType == desiredShopType) {
-                        currentNode.owningBuilding.ReceivePedestrian(this);
-                    } else if (headingHome && currentNode == homeNode)
-                    {
-                        currentNode.owningBuilding.ReceivePedestrian(this);
-                    }
-                
-                    
+                    currentNode.owningBuilding.ReceivePedestrian(this);
                 }
             }
         }
@@ -56,7 +49,7 @@ public class Pedestrian : MonoBehaviour
             queue.Add(neighbor);
             scores[neighbor] = 0;
             cameFrom[neighbor] = currentNode;
-            
+
         }
 
         while (queue.Count > 0)
@@ -86,7 +79,7 @@ public class Pedestrian : MonoBehaviour
                     scores[neighbor] = newScore;
                     cameFrom[neighbor] = curNode;
                 }
-                if ((!headingHome && neighbor.shopType == desiredShopType) || (headingHome && neighbor == homeNode))
+                if ((!headingHome && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode))
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
                     return;

@@ -2,19 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Building : MonoBehaviour
+public class Building : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public Lot parentLot;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public void ReceivePedestrian(Pedestrian pedestrian) {
+        var destinationComp = this.GetComponent<Destination>();
+        var generatorComp = this.GetComponent<Generator>();
 
-    public abstract void ReceivePedestrian(Pedestrian pedestrian);
+        // TODO this is gross - but do we have some weird summing function for pedestrian reception across all components?
+        // gah
+        if (destinationComp != null) {
+            destinationComp.ReceivePedestrian(pedestrian);
+        }
+        if (generatorComp != null) {
+            generatorComp.ReceivePedestrian(pedestrian);
+        }
+        pedestrian.transform.position = parentLot.exitNode.transform.position;
+        pedestrian.currentNode = parentLot.exitNode;
+        pedestrian.CalculateItinerary();
+    }
 }

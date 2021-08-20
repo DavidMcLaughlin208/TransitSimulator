@@ -66,9 +66,9 @@ public class Setup : MonoBehaviour
         {
             rand = Random.Range(0, shopTypes.Count);
             ShopType type = shopTypes[rand];
-            hotel1.SpawnPedestrian(type);
-            hotel2.SpawnPedestrian(type);
-            hotel3.SpawnPedestrian(type);
+            // hotel1.SpawnPedestrian(type);
+            // hotel2.SpawnPedestrian(type);
+            // hotel3.SpawnPedestrian(type);
 
         }
     }

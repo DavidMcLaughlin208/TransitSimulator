@@ -48,5 +48,4 @@ public static class BlockOrientations {
     public static List<Vector2Int> single = new List<Vector2Int>() {
         new Vector2Int(0,0)
     };
-
 }

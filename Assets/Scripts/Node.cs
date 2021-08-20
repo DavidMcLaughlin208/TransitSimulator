@@ -7,7 +7,7 @@ public class Node : MonoBehaviour
     public List<Node> connections = new List<Node>();
     public LineRenderer line;
     public string color = "";
-    public ShopType shopType = ShopType.NONE;
+    public DestinationType destType = DestinationType.NONE;
     public Building owningBuilding = null;
 
     // Start is called before the first frame update
@@ -19,7 +19,7 @@ public class Node : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void RecalculateLinePos()

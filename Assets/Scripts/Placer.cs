@@ -27,8 +27,6 @@ public class Placer : MonoBehaviour
     {
         datastore.inputEvents.Receive<ClickEvent>().Subscribe(e =>
         {
-            Debug.Log($"Clicked on {e.cell}");
-
             var blockOrientation = new List<List<Vector2Int>>() {
                 BlockOrientations.I, BlockOrientations.O, BlockOrientations.J, BlockOrientations.L,
             }.getRandomElement();
@@ -48,7 +46,6 @@ public class Placer : MonoBehaviour
 
             if (validPlacement)
             {
-                Debug.Log($"Valid placement");
                 topLeftOrigins
                     .Also(coord => PlaceLot(coord));
 
@@ -61,23 +58,11 @@ public class Placer : MonoBehaviour
                     .Also(i => ReorientRoad(i))
                     .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
                     .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections());
+                topLeftOrigins
+                    .Also(i => ConnectLotToStreet(i));
                 var hotels = topLeftOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
                 var shops = topLeftOrigins.Except(hotels).Also(i => PlaceShop(i));
-                hotels
-                    .Also(i => {
-                        var hotel = datastore.city[i].occupier.GetComponent<Hotel>();
-                        hotel.ConnectToStreets();
-                    });
-                shops
-                    .Also(i => {
-                        var shop = datastore.city[i].occupier.GetComponent<Shop>();
-                        shop.ConnectToStreets();
-                    });
-                hotels
-                    .Also(i => {
-                        var hotel = datastore.city[i].occupier.GetComponent<Hotel>();
-                        hotel.SpawnPedestrian(ShopType.COFFEE);
-                    });
+                hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
             }
         });
     }
@@ -110,14 +95,9 @@ public class Placer : MonoBehaviour
         }
     }
 
-    void PlaceHotel(Vector2Int origin) {
-        // we should opt for only storing Lot and Road tiles in the city grid
-        // then attach components for specific behaviors, maybe less specific than Hotel
-        // components like "spawner", "receiver", "queuer", and "transporter"
-        // then we can mix and match components for buildings with various "floors" that have diff behavior
-        // stacking an apartment on top of a restaurant would be easier if we're just adding components
-        // and the components affect the behavior of the nodes attached to the street
-        var hotel = datastore.city[origin].occupier.AddAndGetComponent<Hotel>();
+    void ConnectLotToStreet(Vector2Int origin) {
+        var lot = datastore.city[origin].occupier.GetComponent<Lot>();
+        var lotDir = DirectionUtils.directionRotationMapping[lot.rotation][Direction.NORTH];
 
         var nCoord = new Vector2Int(origin.x, origin.y + 1);
         var sCoord = new Vector2Int(origin.x, origin.y - datastore.lotScale.y);
@@ -129,59 +109,50 @@ public class Placer : MonoBehaviour
 
         if (neighboringStreets.Count() > 0) {
             var randomNeighboringStreet = neighboringStreets.getRandomElement();
+            Tile neighboringTile = datastore.city[randomNeighboringStreet].nodeTile;
             if (randomNeighboringStreet == nCoord) {
-                hotel.rotation = Rotation.ZERO;
+                lot.rotation = Rotation.ZERO;
             }
             if (randomNeighboringStreet == sCoord) {
-                hotel.rotation = Rotation.ONEEIGHTY;
+                lot.rotation = Rotation.ONEEIGHTY;
             }
             if (randomNeighboringStreet == eCoord) {
-                hotel.rotation = Rotation.NINETY;
+                lot.rotation = Rotation.NINETY;
             }
             if (randomNeighboringStreet == wCoord) {
-                hotel.rotation = Rotation.TWOSEVENTY;
+                lot.rotation = Rotation.TWOSEVENTY;
             }
+            lot.ConnectToStreet(neighboringTile);
+        } else {
+            Debug.LogWarning($"Couldn't find a neighboring street for lot at {origin}");
         }
 
-        datastore.city[origin].occupier.assignSpriteFromPath("Sprites/brred");
+    }
+
+    GameObject PlaceAnonBuilding(Vector2Int origin) {
+        var lot = datastore.city[origin].occupier.GetComponent<Lot>();
+        var building = GameObject.Instantiate(
+            prefabs.building,
+            lot.transform.position,
+            Quaternion.identity);
+        building.transform.parent = lot.transform;
+        building.GetComponent<Building>().parentLot = lot; // this double-link is not great
+        return building;
+    }
+
+    void PlaceHotel(Vector2Int origin) {
+        var building = PlaceAnonBuilding(origin);
+        building.gameObject.name = "Hotel";
+        building.AddComponent<Generator>();
+        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brred");
     }
 
     void PlaceShop(Vector2Int origin) {
-        // we should opt for only storing Lot and Road tiles in the city grid
-        // then attach components for specific behaviors, maybe less specific than Hotel
-        // components like "spawner", "receiver", "queuer", and "transporter"
-        // then we can mix and match components for buildings with various "floors" that have diff behavior
-        // stacking an apartment on top of a restaurant would be easier if we're just adding components
-        // and the components affect the behavior of the nodes attached to the street
-        var shop = datastore.city[origin].occupier.AddAndGetComponent<Shop>();
-
-        var nCoord = new Vector2Int(origin.x, origin.y + 1);
-        var sCoord = new Vector2Int(origin.x, origin.y - datastore.lotScale.y);
-        var eCoord = new Vector2Int(origin.x + datastore.lotScale.x, origin.y);
-        var wCoord = new Vector2Int(origin.x - 1, origin.y);
-
-        var neighboringStreets = new List<Vector2Int>(){ nCoord, sCoord, eCoord, wCoord }
-            .Where(coord => datastore.city.ContainsKey(coord) && datastore.city[coord].nodeTile != null);
-
-        if (neighboringStreets.Count() > 0) {
-            var randomNeighboringStreet = neighboringStreets.getRandomElement();
-            if (randomNeighboringStreet == nCoord) {
-                shop.rotation = Rotation.ZERO;
-            }
-            if (randomNeighboringStreet == sCoord) {
-                shop.rotation = Rotation.ONEEIGHTY;
-            }
-            if (randomNeighboringStreet == eCoord) {
-                shop.rotation = Rotation.NINETY;
-            }
-            if (randomNeighboringStreet == wCoord) {
-                shop.rotation = Rotation.TWOSEVENTY;
-            }
-        }
-
-        shop.setShopType(ShopType.COFFEE);
-
-        datastore.city[origin].occupier.assignSpriteFromPath("Sprites/cyan");
+        var building = PlaceAnonBuilding(origin);
+        var shop = building.AddAndGetComponent<Destination>();
+        building.gameObject.name = "Coffee Shop";
+        shop.destType = DestinationType.COFFEE;
+        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
     }
 
     void PlaceRoad(Vector2Int origin) {
