@@ -97,36 +97,24 @@ public class Placer : MonoBehaviour
 
     void ConnectLotToStreet(Vector2Int origin) {
         var lot = datastore.city[origin].occupier.GetComponent<Lot>();
-        var lotDir = DirectionUtils.directionRotationMapping[lot.rotation][Direction.NORTH];
 
-        var nCoord = new Vector2Int(origin.x, origin.y + 1);
-        var sCoord = new Vector2Int(origin.x, origin.y - datastore.lotScale.y);
-        var eCoord = new Vector2Int(origin.x + datastore.lotScale.x, origin.y);
-        var wCoord = new Vector2Int(origin.x - 1, origin.y);
+        var neighboringStreets = DirectionUtils.allDirections
+            .ToDictionary(
+                dir => dir,
+                dir =>
+                    datastore.city.GetAllBorderingNeighborsInDirection(dir, origin)
+                        .Where(cityTile => cityTile.nodeTile != null) // filter down to just road tiles, TODO fix this
+                        .ToList())
+            .Where(kvp => kvp.Value.Count() > 0) // filter to directions that have road tiles
+            .ToDictionary(i => i.Key, i => i.Value);
 
-        var neighboringStreets = new List<Vector2Int>(){ nCoord, sCoord, eCoord, wCoord }
-            .Where(coord => datastore.city.ContainsKey(coord) && datastore.city[coord].nodeTile != null);
+        var randomDirection = neighboringStreets.Keys.getRandomElement();
 
-        if (neighboringStreets.Count() > 0) {
-            var randomNeighboringStreet = neighboringStreets.getRandomElement();
-            Tile neighboringTile = datastore.city[randomNeighboringStreet].nodeTile;
-            if (randomNeighboringStreet == nCoord) {
-                lot.rotation = Rotation.ZERO;
-            }
-            if (randomNeighboringStreet == sCoord) {
-                lot.rotation = Rotation.ONEEIGHTY;
-            }
-            if (randomNeighboringStreet == eCoord) {
-                lot.rotation = Rotation.NINETY;
-            }
-            if (randomNeighboringStreet == wCoord) {
-                lot.rotation = Rotation.TWOSEVENTY;
-            }
-            lot.ConnectToStreet(neighboringTile);
-        } else {
-            Debug.LogWarning($"Couldn't find a neighboring street for lot at {origin}");
-        }
+        lot.rotation = DirectionUtils.generalRotationMapping[randomDirection];
 
+        var randomNeighboringStreet = neighboringStreets[randomDirection].getRandomElement();
+        Tile neighboringTile = randomNeighboringStreet.nodeTile;
+        lot.ConnectToStreet(neighboringTile);
     }
 
     GameObject PlaceAnonBuilding(Vector2Int origin) {
@@ -168,40 +156,15 @@ public class Placer : MonoBehaviour
     }
 
     void ReorientRoad(Vector2Int origin) {
-        var nCoord = new Vector2Int(origin.x, origin.y + 1);
-        var sCoord = new Vector2Int(origin.x, origin.y - 1);
-        var eCoord = new Vector2Int(origin.x + 1, origin.y);
-        var wCoord = new Vector2Int(origin.x - 1, origin.y);
-
-        var n = datastore.city.ContainsKey(nCoord) && datastore.city[nCoord].nodeTile != null; // check if n road tile exists. this is ugly
-        var s = datastore.city.ContainsKey(sCoord) && datastore.city[sCoord].nodeTile != null;
-        var e = datastore.city.ContainsKey(eCoord) && datastore.city[eCoord].nodeTile != null;
-        var w = datastore.city.ContainsKey(wCoord) && datastore.city[wCoord].nodeTile != null;
-
-        if (n && s && !e && !w) {
-            datastore.city[origin].nodeTile.roadType = RoadType.Straight;
-            datastore.city[origin].nodeTile.tileRotation = Rotation.NINETY;
-        }
-        if (e && w && !n && !s) {
-            datastore.city[origin].nodeTile.roadType = RoadType.Straight;
-            datastore.city[origin].nodeTile.tileRotation = Rotation.ZERO;
-        }
-        if (!n && s && e && !w) {
-            datastore.city[origin].nodeTile.roadType = RoadType.Corner;
-            datastore.city[origin].nodeTile.tileRotation = Rotation.ZERO;
-        }
-        if (!n && s && !e && w) {
-            datastore.city[origin].nodeTile.roadType = RoadType.Corner;
-            datastore.city[origin].nodeTile.tileRotation = Rotation.NINETY;
-        }
-        if (n && !s && !e && w) {
-            datastore.city[origin].nodeTile.roadType = RoadType.Corner;
-            datastore.city[origin].nodeTile.tileRotation = Rotation.ONEEIGHTY;
-        }
-        if (n && !s && e && !w) {
-            datastore.city[origin].nodeTile.roadType = RoadType.Corner;
-            datastore.city[origin].nodeTile.tileRotation = Rotation.TWOSEVENTY;
-        }
+        var missingNeighbors = DirectionUtils.allDirections
+            .Where(dir => {
+                var coord = origin + Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[dir]);
+                return !datastore.city.ContainsKey(coord) || datastore.city[coord].nodeTile == null;
+            })
+            .ToList();
+        var roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingNeighbors);
+        datastore.city[origin].nodeTile.roadType = roadTypeAndRotation.roadType;
+        datastore.city[origin].nodeTile.tileRotation = roadTypeAndRotation.rotation;
     }
 
     bool TileIsVacant(Vector2Int origin) {
