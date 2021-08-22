@@ -1,4 +1,3 @@
-using System.Net;
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
@@ -10,11 +9,32 @@ public class Placer : MonoBehaviour
     Prefabs prefabs;
 
     List<Vector2Int> roadOutlines = new List<Vector2Int>();
+    List<Vector2Int> nextBlockOrientation = BlockOrientations.L;
 
-    public void Awake()
-    {
+    PlacementPreview preview = null;
+    public class PlacementPreview {
+        public bool validPlacement = false;
+        public List<Vector2Int> lotOrigins = new List<Vector2Int>();
+        public List<GameObject> previewedLots = new List<GameObject>();
+        public List<Vector2Int> roadCoords = new List<Vector2Int>();
+        public List<GameObject> previewedRoads = new List<GameObject>();
+
+        public void Cleanup() {
+            validPlacement = false;
+            lotOrigins.Clear();
+            previewedLots.ForEach(i => GameObject.Destroy(i));
+            previewedLots.Clear();
+            previewedRoads.ForEach(i => GameObject.Destroy(i));
+            previewedRoads.Clear();
+            roadCoords.Clear();
+        }
+    }
+
+    public void Awake() {
         datastore = this.gameObject.GetComponent<Datastore>();
         prefabs = this.gameObject.GetComponent<Prefabs>();
+
+        nextBlockOrientation = BlockOrientations.allOrientations.getRandomElement();
     }
 
     public void Update() {
@@ -27,47 +47,100 @@ public class Placer : MonoBehaviour
     {
         datastore.inputEvents.Receive<ClickEvent>().Subscribe(e =>
         {
-            var blockOrientation = new List<List<Vector2Int>>() {
-                BlockOrientations.I, BlockOrientations.O, BlockOrientations.J, BlockOrientations.L,
-            }.getRandomElement();
-            var topLeftOrigins = blockOrientation
-                .Select(coord => new Vector2Int(
-                    coord.x * datastore.lotScale.x,
-                    coord.y * datastore.lotScale.y
-                ))
-                .Select(coord => new Vector2Int(
-                    coord.x + e.cell.x, coord.y + e.cell.y
-                ))
-                .ToList();
-
-            var validPlacement = topLeftOrigins.All(coord =>
-                TileChunkExistsAt(coord, datastore.lotScale) && TileChunkIsVacantAt(coord, datastore.lotScale)
-            );
-
-            if (validPlacement)
-            {
-                topLeftOrigins
+            if (preview.validPlacement) {
+                preview.lotOrigins
                     .Also(coord => PlaceLot(coord));
-
-                roadOutlines = topLeftOrigins.SelectMany(topLeftCorner => {
-                    return Utils.EndExclusiveRange2D(-1,datastore.lotScale.x + 1,-1,datastore.lotScale.y + 1)
-                    .Select(coord => new Vector2Int(topLeftCorner.x + coord.x, topLeftCorner.y - coord.y));
-                }).Where(coord => TileExistsAt(coord) && !TileIsOccupiedByLot(coord)).ToList();
-                roadOutlines
+                preview.roadCoords
                     .Also(i => PlaceRoad(i))
                     .Also(i => ReorientRoad(i))
                     .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
-                    .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections());
-                topLeftOrigins
+                    .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
+                    .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
+                preview.lotOrigins
                     .Also(i => ConnectLotToStreet(i));
-                var hotels = topLeftOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
-                var shops = topLeftOrigins.Except(hotels).Also(i => PlaceShop(i));
+                var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
+                var shops = preview.lotOrigins.Except(hotels).Also(i => PlaceShop(i));
                 hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
+                nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
+                preview.Cleanup();
             }
         });
+
+        datastore.inputEvents
+            .Receive<HoverEvent>()
+            .Where(e => TileExistsAt(new Vector2Int(e.cell.x, e.cell.y)))
+            .Subscribe(e => {
+                if (preview == null) {
+                    preview = new PlacementPreview();
+                }
+
+                preview.lotOrigins = nextBlockOrientation
+                    .Select(coord => new Vector2Int(
+                        coord.x * datastore.lotScale.x,
+                        coord.y * datastore.lotScale.y
+                    ))
+                    .Select(coord => new Vector2Int(
+                        coord.x + e.cell.x, coord.y + e.cell.y
+                    ))
+                    .ToList();
+
+                var lotChunks = preview.lotOrigins
+                    .SelectMany(coord =>
+                        Utils.EndExclusiveRange2D(
+                            0,
+                            datastore.lotScale.x,
+                            0,
+                            datastore.lotScale.y)
+                        .Select(i => new Vector2Int(coord.x + i.x, coord.y - i.y)) // transform 2d range to +x -y to properly bound down and to the right
+                    )
+                    .ToList();
+
+                preview.roadCoords = preview.lotOrigins.SelectMany(topLeftCorner => {
+                        return Utils
+                            .EndExclusiveRange2D(-1, datastore.lotScale.x + 1, -1, datastore.lotScale.y + 1)
+                            .Where(coord => // filter to coordinates that are on the edges of the bounding box
+                                coord.x == -1
+                                || coord.x == datastore.lotScale.x
+                                || coord.y == -1
+                                || coord.y == datastore.lotScale.y
+                            )
+                            .Select(coord => new Vector2Int(topLeftCorner.x + coord.x, topLeftCorner.y - coord.y));
+                    })
+                    .Where(coord => TileExistsAt(coord) && !lotChunks.Contains(coord))
+                    .Distinct()
+                    .ToList();
+
+
+                preview.validPlacement = preview.roadCoords.All(coord => { // filter to all valid tiles that are either empty or have a roadtile occupier
+                    var tileIsRoadOrEmpty = datastore.city.ContainsKey(coord)
+                        ? datastore.city[coord].occupier == null || datastore.city[coord].nodeTile != null
+                        : true;
+                    return TileExistsAt(coord) && tileIsRoadOrEmpty;
+                });
+
+                preview.previewedLots = preview.lotOrigins.Select((origin, index) => {
+                    if (preview.previewedLots.Count() != preview.lotOrigins.Count()) {
+                        // if the count is a mismatch, just destroy the list and start over
+                        preview.previewedLots.ForEach(i => GameObject.Destroy(i));
+                        return PreviewLot(origin, preview.validPlacement);
+                    } else {
+                        return PreviewLot(origin, preview.validPlacement, preview.previewedLots[index]);
+                    }
+                }).ToList();
+
+                preview.previewedRoads = preview.roadCoords.Select((origin, index) => {
+                    if (preview.previewedRoads.Count() != preview.roadCoords.Count()) {
+                        // if the count is a mismatch, just destroy the list and start over
+                        preview.previewedRoads.ForEach(i => GameObject.Destroy(i));
+                        return PreviewRoad(origin, preview.validPlacement);
+                    } else {
+                        return PreviewRoad(origin, preview.validPlacement, preview.previewedRoads[index]);
+                    }
+                }).ToList();
+            });
     }
 
-    void PlaceLot(Vector2Int origin) {
+    Vector3 GetLotCenterFromTopLeftOrigin(Vector2Int origin) {
         var topLeftCenter = datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0));
         var topRightCenter = datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x + (datastore.lotScale.x - 1), origin.y, 0));
         var bottomLeftCenter = datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y - (datastore.lotScale.y - 1), 0));
@@ -75,9 +148,33 @@ public class Placer : MonoBehaviour
         var lotCenterX = ((topRightCenter.x - topLeftCenter.x) / 2f) + topLeftCenter.x;
         var lotCenterY = ((bottomLeftCenter.y - topLeftCenter.y) / 2f) + topLeftCenter.y;
 
+        return new Vector3(lotCenterX, lotCenterY, 0);
+    }
+
+    GameObject PreviewLot(Vector2Int origin, bool validPlacement, GameObject instance=null) {
+        var lot = instance;
+        if (lot == null) {
+            lot = GameObject.Instantiate(
+                prefabs.lot,
+                GetLotCenterFromTopLeftOrigin(origin),
+                Quaternion.identity
+            );
+            lot.transform.localScale = new Vector3(datastore.lotScale.x, datastore.lotScale.y, 1);
+        } else {
+            lot.transform.position = GetLotCenterFromTopLeftOrigin(origin);
+        }
+        if (validPlacement) {
+            lot.GetComponent<SpriteRenderer>().color = Color.green;
+        } else {
+            lot.GetComponent<SpriteRenderer>().color = Color.red;
+        }
+        return lot;
+    }
+
+    void PlaceLot(Vector2Int origin) {
         var lot = GameObject.Instantiate(
             prefabs.lot,
-            new Vector3(lotCenterX, lotCenterY, 0),
+            GetLotCenterFromTopLeftOrigin(origin),
             Quaternion.identity
         );
         lot.transform.localScale = new Vector3(datastore.lotScale.x, datastore.lotScale.y, 1);
@@ -144,18 +241,40 @@ public class Placer : MonoBehaviour
     }
 
     void PlaceRoad(Vector2Int origin) {
-        var road = GameObject.Instantiate(
-            prefabs.road,
-            datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0)),
-            Quaternion.identity
-        );
-        datastore.city[origin] = new CityTile() {
-            occupier = road,
-            nodeTile = road.GetComponent<Tile>()
-        };
+        if (!datastore.city.Keys.Contains(origin)) {
+            var road = GameObject.Instantiate(
+                prefabs.road,
+                datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0)),
+                Quaternion.identity
+            );
+            datastore.city[origin] = new CityTile() {
+                occupier = road,
+                nodeTile = road.GetComponent<Tile>()
+            };
+        }
+    }
+
+    GameObject PreviewRoad(Vector2Int origin, bool validPlacement, GameObject instance=null) {
+        var road = instance;
+        if (road == null) {
+            road = GameObject.Instantiate(
+                prefabs.road,
+                GetLotCenterFromTopLeftOrigin(origin),
+                Quaternion.identity
+            );
+        } else {
+            road.transform.position = datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0));
+        }
+        if (validPlacement) {
+            road.GetComponent<SpriteRenderer>().color = Color.green;
+        } else {
+            road.GetComponent<SpriteRenderer>().color = Color.red;
+        }
+        return road;
     }
 
     void ReorientRoad(Vector2Int origin) {
+        Debug.Log($"Attempting to reorient road at {origin}");
         var missingNeighbors = DirectionUtils.allDirections
             .Where(dir => {
                 var coord = origin + Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[dir]);
@@ -187,7 +306,6 @@ public class Placer : MonoBehaviour
                 var validTileInMap = datastore.validTiles.GetTile(new Vector3Int(origin.x + x, origin.y - y, 0)) != null;
 
                 if (!validTileInMap) {
-                    Debug.Log($"Tile does not exist at x={origin.x + x},y={origin.y - y}");
                     return false;
                 }
             }
@@ -203,7 +321,6 @@ public class Placer : MonoBehaviour
                 var occupiedInCity = datastore.city.ContainsKey(new Vector2Int(origin.x + x, origin.y - y));
 
                 if (occupiedInCity) {
-                    Debug.Log($"Tile is not vacant at x={origin.x + x},y={origin.y - y}");
                     return false;
                 }
             }

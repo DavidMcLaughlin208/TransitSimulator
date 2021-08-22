@@ -51,4 +51,16 @@ public static class CityUtils {
         }
         return origin;
     }
+
+    public static Dictionary<Vector2Int, CityTile?> GetAllTilesInBounds(
+        this Dictionary<Vector2Int, CityTile> city,
+        Vector2Int topLeftOrigin,
+        Vector2Int inclusiveSize
+    ) {
+        var allCoords = Utils.EndExclusiveRange2D(
+            0, inclusiveSize.x + 1, 0, inclusiveSize.y + 1
+        ).Select(i => new Vector2Int(topLeftOrigin.x + i.x, topLeftOrigin.y - i.y));
+
+        return allCoords.ToDictionary(i => i, i => city.ContainsKey(i) ? city[i] : null);
+    }
 }

@@ -48,4 +48,12 @@ public static class BlockOrientations {
     public static List<Vector2Int> single = new List<Vector2Int>() {
         new Vector2Int(0,0)
     };
+
+    public static List<List<Vector2Int>> allOrientations = new List<List<Vector2Int>>() {
+        BlockOrientations.I,
+        BlockOrientations.J,
+        BlockOrientations.L,
+        BlockOrientations.O,
+        BlockOrientations.single,
+    };
 }
