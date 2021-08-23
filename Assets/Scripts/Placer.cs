@@ -43,31 +43,33 @@ public class Placer : MonoBehaviour
         });
     }
 
-    public void Start()
-    {
-        datastore.inputEvents.Receive<ClickEvent>().Subscribe(e =>
-        {
-            if (preview.validPlacement) {
-                preview.lotOrigins
-                    .Also(coord => PlaceLot(coord));
-                preview.roadCoords
-                    .Also(i => PlaceRoad(i))
-                    .Also(i => ReorientRoad(i))
-                    .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
-                    .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
-                    .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
-                preview.lotOrigins
-                    .Also(i => ConnectLotToStreet(i));
-                var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
-                var shops = preview.lotOrigins.Except(hotels).Also(i => PlaceShop(i));
-                hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
-                nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
-                preview.Cleanup();
-            }
-        });
+    public void Start() {
+        datastore.inputEvents
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == this)
+            .Subscribe(e => {
+                if (preview.validPlacement) {
+                    preview.lotOrigins
+                        .Also(coord => PlaceLot(coord));
+                    preview.roadCoords
+                        .Also(i => PlaceRoad(i))
+                        .Also(i => ReorientRoad(i))
+                        .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
+                        .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
+                        .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
+                    preview.lotOrigins
+                        .Also(i => ConnectLotToStreet(i));
+                    var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
+                    var shops = preview.lotOrigins.Except(hotels).Also(i => PlaceShop(i));
+                    hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
+                    nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
+                    preview.Cleanup();
+                }
+            });
 
         datastore.inputEvents
             .Receive<HoverEvent>()
+            .Where(_ => datastore.activeTool.Value == this)
             .Where(e => TileExistsAt(new Vector2Int(e.cell.x, e.cell.y)))
             .Subscribe(e => {
                 if (preview == null) {
@@ -138,6 +140,18 @@ public class Placer : MonoBehaviour
                     }
                 }).ToList();
             });
+
+            datastore.inputEvents
+                .Receive<HoverEvent>()
+                .Where(e => !TileExistsAt(new Vector2Int(e.cell.x, e.cell.y)))
+                .Where(_ => preview != null)
+                .Subscribe(_ => preview.Cleanup());
+
+            datastore.activeTool.Subscribe(e => {
+                if (e != this) {
+                    preview.Cleanup();
+                }
+            });
     }
 
     Vector3 GetLotCenterFromTopLeftOrigin(Vector2Int origin) {
@@ -164,9 +178,9 @@ public class Placer : MonoBehaviour
             lot.transform.position = GetLotCenterFromTopLeftOrigin(origin);
         }
         if (validPlacement) {
-            lot.GetComponent<SpriteRenderer>().color = Color.green;
+            lot.GetComponent<SpriteRenderer>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.green];
         } else {
-            lot.GetComponent<SpriteRenderer>().color = Color.red;
+            lot.GetComponent<SpriteRenderer>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.magenta];
         }
         return lot;
     }
@@ -274,7 +288,6 @@ public class Placer : MonoBehaviour
     }
 
     void ReorientRoad(Vector2Int origin) {
-        Debug.Log($"Attempting to reorient road at {origin}");
         var missingNeighbors = DirectionUtils.allDirections
             .Where(dir => {
                 var coord = origin + Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[dir]);
