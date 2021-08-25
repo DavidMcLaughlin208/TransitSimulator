@@ -9,9 +9,12 @@ public class God : MonoBehaviour
     void Awake() {
         datastore = this.gameObject.AddAndGetComponent<Datastore>();
         prefabs = this.gameObject.AddAndGetComponent<Prefabs>();
+        datastore.canvasParent = GameObject.Find("Canvas");
 
         this.gameObject.AddComponent<Mouse>();
         this.gameObject.AddComponent<Placer>();
+        this.gameObject.AddComponent<ToolPicker>();
+
     }
 
     void Start() {
