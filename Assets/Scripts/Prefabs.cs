@@ -11,6 +11,7 @@ public class Prefabs : MonoBehaviour {
     public GameObject building;
 
     public GameObject pedestrian;
+    public GameObject car;
 
     void Awake() {
         baseTilemapPrefab = Resources.Load<GameObject>("Prefabs/BaseTilemap");
@@ -21,5 +22,6 @@ public class Prefabs : MonoBehaviour {
         building = Resources.Load<GameObject>("Prefabs/CityObjects/Building");
 
         pedestrian = Resources.Load<GameObject>("Prefabs/CityObjects/Pedestrian");
+        car = Resources.Load<GameObject>("Prefabs/CityObjects/Car");
     }
 }

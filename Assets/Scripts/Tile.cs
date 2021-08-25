@@ -29,7 +29,6 @@ public class Tile : MonoBehaviour
     public int y;
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
-    //public HashSet<RoadNodeLocation> disabledRoadNodes = new HashSet<RoadNodeLocation>();
 
     public void Awake()
     {
@@ -162,6 +161,23 @@ public class Tile : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    public void RemoveAllNodeConnections()
+    {
+        List<RoadNode> allRoadNodes = new List<RoadNode>(roadNodeMap.Values);
+        for (int i = 0; i < allRoadNodes.Count; i++)
+        {
+            RoadNode roadNode = allRoadNodes[i];
+            roadNode.connections.Clear();
+        }
+
+        List<PedestrianNode> allPedNodes = new List<PedestrianNode>(pedNodeMap.Values);
+        for (int i = 0; i < allPedNodes.Count; i++)
+        {
+            PedestrianNode pedestrianNode = allPedNodes[i];
+            pedestrianNode.connections.Clear();
         }
     }
 

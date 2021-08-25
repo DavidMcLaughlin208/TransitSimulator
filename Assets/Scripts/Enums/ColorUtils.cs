@@ -8,7 +8,7 @@ static class ColorUtils
     {
         if (destType == DestinationType.COFFEE)
         {
-            return solColors[SolarizedColors.brblack];
+            return solColors[SolarizedColors.brgreen];
         }
         else if (destType == DestinationType.TEA)
         {

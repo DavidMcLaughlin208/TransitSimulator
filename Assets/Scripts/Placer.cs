@@ -56,7 +56,9 @@ public class Placer : MonoBehaviour
                         .Also(i => ReorientRoad(i))
                         .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
                         .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
-                        .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
+                        .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines())
+                        .Also(i => PlaceRandomDestination(i, DestinationType.COFFEE))
+                        .Also(i => PlaceRandomCar(i, DestinationType.COFFEE));
                     preview.lotOrigins
                         .Also(i => ConnectLotToStreet(i));
                     var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
@@ -255,16 +257,27 @@ public class Placer : MonoBehaviour
     }
 
     void PlaceRoad(Vector2Int origin) {
-        if (!datastore.city.Keys.Contains(origin)) {
+        if (!datastore.city.Keys.Contains(origin))
+        {
             var road = GameObject.Instantiate(
                 prefabs.road,
                 datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0)),
                 Quaternion.identity
             );
-            datastore.city[origin] = new CityTile() {
+            datastore.city[origin] = new CityTile()
+            {
                 occupier = road,
                 nodeTile = road.GetComponent<Tile>()
             };
+        }
+        else
+        {
+            if (datastore.city[origin].occupier.GetComponent<Tile>() != null)
+            {
+                Tile existingTile = datastore.city[origin].occupier.GetComponent<Tile>();
+                existingTile.RemoveAllNodeConnections();
+                existingTile.SetAllRoadNodesEnabled();
+            }
         }
     }
 
@@ -297,6 +310,54 @@ public class Placer : MonoBehaviour
         var roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingNeighbors);
         datastore.city[origin].nodeTile.roadType = roadTypeAndRotation.roadType;
         datastore.city[origin].nodeTile.tileRotation = roadTypeAndRotation.rotation;
+    }
+
+    void PlaceRandomCar(Vector2Int origin, DestinationType destType)
+    {
+        if (datastore.city.Keys.Contains(origin) && datastore.city[origin].occupier != null && datastore.city[origin].occupier.GetComponent<Tile>() != null)
+        {
+            if (Random.Range(0, 10) > 6)
+            {
+                Tile road = datastore.city[origin].occupier.GetComponent<Tile>();
+                List<RoadNode> allRoadNodes = new List<RoadNode>(road.roadNodeMap.Values);
+                for (int i = 0; i < allRoadNodes.Count; i++)
+                {
+                    RoadNode roadNode = allRoadNodes[i];
+                    if (roadNode.disabled || roadNode.destType == destType)
+                    {
+                        continue;
+                    }
+                    GameObject carObj = Object.Instantiate(prefabs.car, transform);
+                    carObj.transform.position = roadNode.transform.position;
+                    Car car = carObj.GetComponent<Car>();
+                    car.SetNewCurrentNode((RoadNode)roadNode);
+                    car.homeNode = (RoadNode)roadNode;
+                    car.desiredDestType = destType;
+                    break;
+                }
+            }
+        }
+    }
+
+    void PlaceRandomDestination(Vector2Int origin, DestinationType destType)
+    {
+        if (datastore.city.Keys.Contains(origin) && datastore.city[origin].occupier != null && datastore.city[origin].occupier.GetComponent<Tile>() != null)
+        {
+            if (Random.Range(0, 10) > 8)
+            {
+                Tile road = datastore.city[origin].occupier.GetComponent<Tile>();
+                List<RoadNode> allRoadNodes = new List<RoadNode>(road.roadNodeMap.Values);
+                for (int i = 0; i < allRoadNodes.Count; i++)
+                {
+                    RoadNode roadNode = allRoadNodes[i];
+                    if (roadNode.disabled)
+                    {
+                        continue;
+                    }
+                    roadNode.destType = destType;
+                }
+            }
+        }
     }
 
     bool TileIsVacant(Vector2Int origin) {
