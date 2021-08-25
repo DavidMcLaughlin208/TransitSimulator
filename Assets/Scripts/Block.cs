@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Block {
 
@@ -56,4 +57,16 @@ public static class BlockOrientations {
         BlockOrientations.O,
         BlockOrientations.single,
     };
+
+    public static List<Vector2Int> RotateClockwise(this List<Vector2Int> blockOrientation) {
+        return blockOrientation.Select(i => {
+            return new Vector2Int(i.y, i.x * -1);
+        }).ToList();
+    }
+
+    public static List<Vector2Int> RotateCounterClockwise(this List<Vector2Int> blockOrientation) {
+        return blockOrientation.Select(i => {
+            return new Vector2Int(i.y * -1, i.x);
+        }).ToList();
+    }
 }

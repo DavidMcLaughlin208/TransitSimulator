@@ -11,7 +11,7 @@ public class God : MonoBehaviour
         prefabs = this.gameObject.AddAndGetComponent<Prefabs>();
         datastore.canvasParent = GameObject.Find("Canvas");
 
-        this.gameObject.AddComponent<Mouse>();
+        this.gameObject.AddComponent<MouseAndKeyboard>();
         this.gameObject.AddComponent<Placer>();
         this.gameObject.AddComponent<ToolPicker>();
 

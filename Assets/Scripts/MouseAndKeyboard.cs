@@ -1,13 +1,20 @@
+using System.Collections.ObjectModel;
 using UnityEngine;
 using UniRx;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
-public class Mouse : MonoBehaviour {
+public class MouseAndKeyboard : MonoBehaviour {
+
+    Datastore datastore;
 
     IObservable<long> clickStream = Observable.EveryUpdate().Where(_ => Input.GetMouseButtonDown(0));
     Vector3Int hoveredCoord;
-    Datastore datastore;
+    List<KeyCode> pressedKeys;
+    List<KeyCode> watchedKeys = new List<KeyCode>() {
+        KeyCode.R, KeyCode.E,
+    };
 
     public void Start() {
         datastore = this.GetComponent<Datastore>();
@@ -33,6 +40,26 @@ public class Mouse : MonoBehaviour {
                 }
             );
         });
+
+        Observable.EveryUpdate()
+            .Where(_ => {
+                var checkedKeys = watchedKeys.Where(keyCode => Input.GetKeyDown(keyCode)).ToList();
+                if (checkedKeys.Count() > 0) {
+                    pressedKeys = checkedKeys;
+                    return true;
+                } else {
+                    return false;
+                }
+            })
+            .Subscribe(_ => {
+                pressedKeys.ForEach(keyCode => {
+                    datastore.inputEvents.Publish(
+                        new KeyEvent() {
+                            cell = hoveredCoord,
+                            keyCode = keyCode,
+                        });
+                });
+            });
     }
 
     Vector3Int GetMouseCellPosition() {
