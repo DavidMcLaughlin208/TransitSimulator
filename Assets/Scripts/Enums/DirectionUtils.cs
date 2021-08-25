@@ -29,6 +29,17 @@ public enum Rotation
 
 public class DirectionUtils
 {
+    public static List<Direction> allDirections = new List<Direction>() {
+        Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
+    };
+
+    public static Dictionary<Direction, Rotation> generalRotationMapping = new Dictionary<Direction, Rotation>() {
+        {Direction.NORTH, Rotation.ZERO},
+        {Direction.SOUTH, Rotation.ONEEIGHTY},
+        {Direction.EAST, Rotation.NINETY},
+        {Direction.WEST, Rotation.TWOSEVENTY},
+    };
+
     // This is reversed because Unity counts Z-rotation counter clockwise and I coded it clockwise before I realized this
     // TODO: Make our rotation logic counter clockwise
     public static Dictionary<Rotation, int> directionToIntMapping = new Dictionary<Rotation, int>()
@@ -387,7 +398,7 @@ public class DirectionUtils
             }
             return true;
         }
-          
+
 
         public override int GetHashCode(Direction[] obj)
         {
@@ -402,6 +413,5 @@ public class DirectionUtils
             return result;
         }
     }
-
 }
 

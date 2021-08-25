@@ -30,6 +30,10 @@ public static class Utils {
         return source;
     }
 
+    public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> source) {
+        return source.Select((item, index) => (item, index));
+    }
+
     public static T AddAndGetComponent<T>(this GameObject parent) where T : Component {
         parent.AddComponent<T>();
         return parent.GetComponent<T>();

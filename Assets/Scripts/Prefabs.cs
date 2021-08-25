@@ -8,6 +8,7 @@ public class Prefabs : MonoBehaviour {
 
     public GameObject road;
     public GameObject lot;
+    public GameObject building;
 
     public GameObject pedestrian;
 
@@ -17,6 +18,7 @@ public class Prefabs : MonoBehaviour {
 
         road = Resources.Load<GameObject>("Prefabs/CityObjects/Road");
         lot = Resources.Load<GameObject>("Prefabs/CityObjects/Lot");
+        building = Resources.Load<GameObject>("Prefabs/CityObjects/Building");
 
         pedestrian = Resources.Load<GameObject>("Prefabs/CityObjects/Pedestrian");
     }

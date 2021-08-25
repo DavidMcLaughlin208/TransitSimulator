@@ -9,7 +9,7 @@ public class Car : MonoBehaviour
     public RoadNode homeNode;
     public RoadNode currentNode;
     public RoadNode targetNode;
-    public ShopType desiredShopType;
+    public DestinationType desiredDestType;
     public float maxSpeed = 1f;
     public float speed = 0f;
     public float acceleration = 0.01f;
@@ -37,7 +37,7 @@ public class Car : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(desiredShopType);
+        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
         originGO = transform.Find("OriginPoint").gameObject;
         intermediateGO = transform.Find("IntermediatePoint").gameObject;
         targetGO = transform.Find("TargetPoint").gameObject;
@@ -232,7 +232,7 @@ public class Car : MonoBehaviour
                     scores[neighbor] = newScore;
                     cameFrom[neighbor] = curNode;
                 }
-                if ((!headingHome && neighbor.shopType == desiredShopType) || (headingHome && neighbor == homeNode))
+                if ((!headingHome && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode))
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
                     targetNode = itinerary[1];
