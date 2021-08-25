@@ -6,6 +6,7 @@ public class Shop : Building
 {
     Datastore datastore;
     Prefabs prefabs;
+    Setup setup;
 
     public int x;
     public int y;
@@ -13,17 +14,24 @@ public class Shop : Building
     public Rotation rotation;
     public PedestrianNode exitNode;
     public PedestrianNode entranceNode;
+    public RoadNode carEntranceNode;
+    public RoadNode carExitNode;
     public ShopType shopType = ShopType.NONE;
     // Start is called before the first frame update
     void Awake()
     {
-        datastore = GameObject.Find("God").GetComponent<Datastore>();
-        prefabs = GameObject.Find("God").GetComponent<Prefabs>();
+        //datastore = GameObject.Find("God").GetComponent<Datastore>();
+        setup = GameObject.Find("Setup").GetComponent<Setup>();
+        //prefabs = GameObject.Find("God").GetComponent<Prefabs>();
         exitNode = this.transform.Find("Exit").GetComponent<PedestrianNode>();
         exitNode.location = PedestrianNodeLocation.TL;
         entranceNode = this.transform.Find("Entrance").GetComponent<PedestrianNode>();
         entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.owningBuilding = this;
+
+        //carEntranceNode = this.transform.Find("CarEntrance").GetComponent<RoadNode>();
+        //carEntranceNode.shopType = this.shopType;
+        //carExitNode = this.transform.Find("CarExit").GetComponent<RoadNode>();
     }
 
     void Start()
@@ -50,15 +58,23 @@ public class Shop : Building
 
     public void ConnectToStreets()
     {
+        //Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
+        //Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir] * datastore.lotScale * 1.01f / 2f;
+        //Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + offset);
+
         Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
-        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir] * datastore.lotScale * 1.01f / 2f;
-        Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + offset);
+        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir];
+        Tile neighboringTile = setup.getTile((Vector2)transform.position + offset);
         if (neighboringTile != null)
         {
             Node otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(entranceNode.location, rotation), entranceNode);
             entranceNode.connections.Add(otherNode);
             otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(exitNode.location, rotation), exitNode);
             exitNode.connections.Add(otherNode);
+
+            //neighboringTile.ReceiveRoadNodeConnectionAttempt(dir, DirectionUtils.RoadUtils.Rotate(carExitNode.location, rotation), carExitNode);
+            //RoadNode streetEntranceConnectionNode = neighboringTile.roadNodeMap
+            //this.carExitNode.connections.Add(streetEntranceConnectionNode);
 
         }
     }

@@ -12,12 +12,15 @@ public class Hotel : Building
 {
     Datastore datastore;
     Prefabs prefabs;
+    Setup setup;
 
     public int x;
     public int y;
     public Rotation rotation;
     public PedestrianNode exitNode;
     public PedestrianNode entranceNode;
+    public RoadNode carEntrance;
+    public RoadNode carExit;
     public List<Pedestrian> presentOccupants = new List<Pedestrian>();
     public List<Pedestrian> allOccupants = new List<Pedestrian>();
     public GameObject pedestrianPrefab;
@@ -25,6 +28,7 @@ public class Hotel : Building
     // Start is called before the first frame update
     void Awake()
     {
+        setup = GameObject.Find("Setup").GetComponent<Setup>();
         datastore = GameObject.Find("God").GetComponent<Datastore>();
         prefabs = GameObject.Find("God").GetComponent<Prefabs>();
         exitNode = this.transform.Find("Exit").GetComponent<PedestrianNode>();
@@ -34,6 +38,9 @@ public class Hotel : Building
         entranceNode.location = PedestrianNodeLocation.TR;
         entranceNode.shopType = ShopType.NONE;
         entranceNode.owningBuilding = this;
+
+        //carEntrance = this.transform.Find("CarEntrance").GetComponent<RoadNode>();        
+        //carExit = this.transform.Find("CarExit").GetComponent<RoadNode>();
     }
 
     Tile GetTileFromDatastore(Vector2 coord) {
@@ -59,9 +66,13 @@ public class Hotel : Building
 
     public void ConnectToStreets()
     {
+        //Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
+        //Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir] * datastore.lotScale * 1.01f / 2f;
+        //Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + offset);
+
         Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
-        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir] * datastore.lotScale * 1.01f / 2f;
-        Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + offset);
+        Vector2 offset = DirectionUtils.directionToCoordinatesMapping[dir];
+        Tile neighboringTile = setup.getTile((Vector2)transform.position + offset);
         if (neighboringTile != null)
         {
             Node otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(entranceNode.location, rotation), entranceNode);
@@ -80,7 +91,6 @@ public class Hotel : Building
         pedestrian.currentNode = exitNode;
         pedestrian.homeNode = entranceNode;
         pedestrian.desiredShopType = shopType;
-        pedestrian.CalculateItinerary();
     }
 
     public override void ReceivePedestrian(Pedestrian pedestrian)

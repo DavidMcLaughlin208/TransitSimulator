@@ -8,13 +8,14 @@ public class Pedestrian : MonoBehaviour
     public Node currentNode;
     public List<Node> itinerary = new List<Node>();
     public ShopType desiredShopType;
-    public float speed = 0.1f;
+    public float speed = 2f;
     public bool headingHome = false;
 
     // Start is called before the first frame update
     void Start()
     {
         GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForShopType(desiredShopType);
+        CalculateItinerary();
     }
 
     // Update is called once per frame

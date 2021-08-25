@@ -10,15 +10,15 @@ public class God : MonoBehaviour
         datastore = this.gameObject.AddAndGetComponent<Datastore>();
         prefabs = this.gameObject.AddAndGetComponent<Prefabs>();
 
-        this.gameObject.AddComponent<Mouse>();
-        this.gameObject.AddComponent<Placer>();
+        //this.gameObject.AddComponent<Mouse>();
+        //this.gameObject.AddComponent<Placer>();
     }
 
     void Start() {
-        var baseTilemap = GameObject.Instantiate(prefabs.baseTilemapPrefab);
-        var activeLevel = GameObject.Instantiate(prefabs.levelPrefab);
-        activeLevel.transform.SetParent(baseTilemap.transform);
+        //var baseTilemap = GameObject.Instantiate(prefabs.baseTilemapPrefab);
+        //var activeLevel = GameObject.Instantiate(prefabs.levelPrefab);
+        //activeLevel.transform.SetParent(baseTilemap.transform);
 
-        datastore.validTiles = activeLevel.GetComponent<Tilemap>();
+        //datastore.validTiles = activeLevel.GetComponent<Tilemap>();
     }
 }

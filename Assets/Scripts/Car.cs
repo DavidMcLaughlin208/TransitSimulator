@@ -150,12 +150,14 @@ public class Car : MonoBehaviour
 
         List<Car> neighboringCars = currentNode.GetCarsAfterCar(this);
         neighboringCars.AddRange(targetNode.cars);
+        float minDistance = 100;
         for (int i = 0; i < neighboringCars.Count; i++)
         {
             Car neighboringCar = neighboringCars[i];
             float distance = Vector2.Distance(transform.position, neighboringCar.transform.position);
-            if (distance < brakingDistance)
+            if (distance < minDistance && distance < brakingDistance)
             {
+                minDistance = distance;
                 float scaledBrakingForce = (brakingDistance - distance) * brakingForce;
                 calcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
                 decelerated = true;
@@ -163,7 +165,7 @@ public class Car : MonoBehaviour
         }
         for (int i = 0; i < intersectionsQueued.Count; i++)
         {
-            RoadNode intersectionNode = intersectionsQueued[i];
+            RoadNode intersectionNode = intersectionsQueued[0];
             bool clearedForIntersection = intersectionNode.ClearedForIntersection(this);
             if (!clearedForIntersection)
             {
@@ -176,6 +178,7 @@ public class Car : MonoBehaviour
                 }
             }
         }
+        
         
         if (!decelerated)
         {

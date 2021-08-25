@@ -72,6 +72,7 @@ public class Setup : MonoBehaviour
                 }
             }
         }
+        List<RoadNodeLocation> allLocations = new List<RoadNodeLocation>() { RoadNodeLocation.NIN, RoadNodeLocation.NOUT, RoadNodeLocation.EIN, RoadNodeLocation.EOUT, RoadNodeLocation.SIN, RoadNodeLocation.SOUT, RoadNodeLocation.WIN, RoadNodeLocation.WOUT };
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
@@ -80,15 +81,21 @@ public class Setup : MonoBehaviour
                 if(tile == null) { continue; }
                 tile.EstablishNodeConnections();
 
-                if (Random.Range(0, 10) > 4)
+                if (Random.Range(0, 10) > 1)
                 {
-                    Node roadNode = tile.roadNodeMap[RoadNodeLocation.EIN];
-                    GameObject carObj = Object.Instantiate(carPrefab, transform);
-                    carObj.transform.position = roadNode.transform.position;
-                    Car car = carObj.GetComponent<Car>();
-                    car.SetNewCurrentNode((RoadNode)roadNode);
-                    car.homeNode = (RoadNode)roadNode;
-                    car.desiredShopType = ShopType.COFFEE;
+                    for (int i = 0; i < allLocations.Count; i++)
+                    {
+                        RoadNodeLocation location = allLocations[i];
+                        RoadNode roadNode = tile.roadNodeMap[location];
+                        if (roadNode.disabled) { continue; }
+                        GameObject carObj = Object.Instantiate(carPrefab, transform);
+                        carObj.transform.position = roadNode.transform.position;
+                        Car car = carObj.GetComponent<Car>();
+                        car.SetNewCurrentNode((RoadNode)roadNode);
+                        car.homeNode = (RoadNode)roadNode;
+                        car.desiredShopType = ShopType.COFFEE;
+                        break;
+                    }
                 }
 
                 if (Random.Range(0, 10) > 7)
