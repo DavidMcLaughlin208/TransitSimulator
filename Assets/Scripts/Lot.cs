@@ -1,4 +1,7 @@
+using System;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 public class Lot : MonoBehaviour {
     // we can remove Rotation once we start attaching entrance and exits to any random neighboring road tile
@@ -27,5 +30,13 @@ public class Lot : MonoBehaviour {
             otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(exitNode.location, rotation), exitNode);
             exitNode.connections.Add(otherNode);
         }
+    }
+
+    public Dictionary<Type, Component?> GetBuildingComponents() {
+        return new List<Type>() {typeof(Generator), typeof(Destination)}
+            .ToDictionary(
+                i => i,
+                i => this.transform.GetComponentInChildren(i)
+            );
     }
 }

@@ -10,6 +10,7 @@ public class Placer : MonoBehaviour
 
     List<Vector2Int> roadOutlines = new List<Vector2Int>();
     List<Vector2Int> nextBlockOrientation = BlockOrientations.L;
+    bool tempSwitchForHotelsAndShops = false;
 
     PlacementPreview preview = null;
     public class PlacementPreview {
@@ -44,59 +45,95 @@ public class Placer : MonoBehaviour
     }
 
     public void Start() {
-        datastore.inputEvents
+        //  _     _            _
+        // | |   | |          | |
+        // | |__ | | ___   ___| | __
+        // | '_ \| |/ _ \ / __| |/ /
+        // | |_) | | (_) | (__|   <
+        // |_.__/|_|\___/ \___|_|\_\
+
+        datastore.inputEvents // place a block on click!
             .Receive<ClickEvent>()
-            .Where(_ => datastore.activeTool.Value == this)
+            .Where(_ => datastore.activeTool.Value == ToolType.BLOCK_PLACER)
+            .Where(_ => preview != null && preview.validPlacement)
             .Subscribe(e => {
-                if (preview.validPlacement) {
-                    preview.lotOrigins
-                        .Also(coord => PlaceLot(coord));
-                    preview.roadCoords
-                        .Also(i => PlaceRoad(i))
-                        .Also(i => ReorientRoad(i))
-                        .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
-                        .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
-                        .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
-                    preview.lotOrigins
-                        .Also(i => ConnectLotToStreet(i));
-                    var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
-                    var shops = preview.lotOrigins.Except(hotels).Also(i => PlaceShop(i));
-                    hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
-                    nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
-                    preview.Cleanup();
-                }
+                preview.lotOrigins
+                    .Also(coord => PlaceLot(coord));
+                preview.roadCoords
+                    .Also(i => PlaceRoad(i))
+                    .Also(i => ReorientRoad(i))
+                    .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
+                    .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
+                    .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
+                preview.lotOrigins
+                    .Also(i => ConnectLotToStreet(i));
+                // var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
+                // var shops = preview.lotOrigins.Except(hotels).Also(i => PlaceShop(i));
+                // hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
+                nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
+                preview.Cleanup();
             });
 
-        datastore.inputEvents
+        datastore.inputEvents // show the block preview on hover!
             .Receive<HoverEvent>()
-            .Where(_ => datastore.activeTool.Value == this)
+            .Where(_ => datastore.activeTool.Value == ToolType.BLOCK_PLACER)
             .Where(e => TileExistsAt(new Vector2Int(e.cell.x, e.cell.y)))
             .Subscribe(e => {
                 RefreshBlockPreview(new Vector2Int(e.cell.x, e.cell.y));
             });
 
-            datastore.inputEvents
-                .Receive<HoverEvent>()
-                .Where(e => !TileExistsAt(new Vector2Int(e.cell.x, e.cell.y)))
-                .Where(_ => preview != null)
-                .Subscribe(_ => preview.Cleanup());
+        datastore.inputEvents // clean up the block preview when hovering over water!
+            .Receive<HoverEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.BLOCK_PLACER)
+            .Where(e => !TileExistsAt(new Vector2Int(e.cell.x, e.cell.y)))
+            .Where(_ => preview != null)
+            .Subscribe(_ => preview.Cleanup());
 
-            datastore.inputEvents
-                .Receive<KeyEvent>()
-                .Subscribe(e => {
-                    if (e.keyCode == KeyCode.R) {
-                        nextBlockOrientation = nextBlockOrientation.RotateClockwise();
-                        RefreshBlockPreview(new Vector2Int(e.cell.x, e.cell.y));
-                    }
-                    if (e.keyCode == KeyCode.E) {
-                        nextBlockOrientation = nextBlockOrientation.RotateCounterClockwise();
-                        RefreshBlockPreview(new Vector2Int(e.cell.x, e.cell.y));
-                    }
-                });
+        datastore.inputEvents // rotate the block when the user presses E or R!
+            .Receive<KeyEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.BLOCK_PLACER)
+            .Subscribe(e => {
+                if (e.keyCode == KeyCode.R) {
+                    nextBlockOrientation = nextBlockOrientation.RotateClockwise();
+                    RefreshBlockPreview(new Vector2Int(e.cell.x, e.cell.y));
+                }
+                if (e.keyCode == KeyCode.E) {
+                    nextBlockOrientation = nextBlockOrientation.RotateCounterClockwise();
+                    RefreshBlockPreview(new Vector2Int(e.cell.x, e.cell.y));
+                }
+            });
 
-            datastore.activeTool.Subscribe(e => {
-                if (e != this) {
-                    preview.Cleanup();
+        datastore.activeTool // clean up the preview whenever the block placer is not active!
+            .Where(e => e != ToolType.BLOCK_PLACER)
+            .Where(_ => preview != null)
+            .Subscribe(e => {
+                preview.Cleanup();
+            });
+
+        //  _           _ _     _ _
+        // | |         (_) |   | (_)
+        // | |__  _   _ _| | __| |_ _ __   __ _
+        // | '_ \| | | | | |/ _` | | '_ \ / _` |
+        // | |_) | |_| | | | (_| | | | | | (_| |
+        // |_.__/ \__,_|_|_|\__,_|_|_| |_|\__, |
+        //                                 __/ |
+        //                                |___/
+
+        datastore.inputEvents // click on an empty lot to add a random building
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.BUILDING_PLACER)
+            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Subscribe(e => {
+                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
+                var lotComponents = lot.GetBuildingComponents();
+                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
+                    if (tempSwitchForHotelsAndShops) {
+                        PlaceHotel(e.cell.ToVec2());
+                        lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>().SpawnPedestrian(DestinationType.COFFEE);
+                    } else {
+                        PlaceShop(e.cell.ToVec2());
+                    }
+                    tempSwitchForHotelsAndShops = !tempSwitchForHotelsAndShops;
                 }
             });
     }

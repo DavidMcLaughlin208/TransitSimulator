@@ -29,7 +29,7 @@ public class Datastore : MonoBehaviour {
     // |_|_| |_| .__/ \__,_|\__|
     //         | |
     //         |_|
-    public ReactiveProperty<MonoBehaviour> activeTool = new ReactiveProperty<MonoBehaviour>();
+    public ReactiveProperty<ToolType?> activeTool = new ReactiveProperty<ToolType?>();
     public MessageBroker inputEvents = new MessageBroker();
 
     //        _
