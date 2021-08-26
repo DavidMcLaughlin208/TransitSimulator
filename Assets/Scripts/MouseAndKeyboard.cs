@@ -10,6 +10,9 @@ public class MouseAndKeyboard : MonoBehaviour {
     Datastore datastore;
 
     IObservable<long> clickStream = Observable.EveryUpdate().Where(_ => Input.GetMouseButtonDown(0));
+    IObservable<long> mouseUpStream = Observable.EveryUpdate().Where(_ => Input.GetMouseButtonUp(0));
+    IObservable<long> mouseMoveStream = Observable.EveryUpdate();
+    public Vector3 mousePosition;
     Vector3Int hoveredCoord;
     List<KeyCode> pressedKeys;
     List<KeyCode> watchedKeys = new List<KeyCode>() {
@@ -17,11 +20,21 @@ public class MouseAndKeyboard : MonoBehaviour {
     };
 
     public void Start() {
+        mousePosition = Input.mousePosition;
         datastore = this.GetComponent<Datastore>();
         clickStream.Subscribe(_ => {
             datastore.inputEvents.Publish(
                 new ClickEvent() {
                     cell = GetMouseCellPosition(),
+                }
+            );
+        });
+
+        mouseUpStream.Subscribe(_ =>
+        {
+            datastore.inputEvents.Publish(
+                new MouseUpEvent() {
+                    mouseLocation = Input.mousePosition
                 }
             );
         });
@@ -40,6 +53,14 @@ public class MouseAndKeyboard : MonoBehaviour {
                 }
             );
         });
+
+        Observable.EveryUpdate()
+            .Where(_ => mousePosition != Input.mousePosition)
+            .Subscribe(_ => {
+                this.mousePosition = Input.mousePosition;
+                datastore.inputEvents.Publish(new MouseMoveEvent());
+            });
+            
 
         Observable.EveryUpdate()
             .Where(_ => {
