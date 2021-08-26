@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UniRx;
+using System;
 
 public class God : MonoBehaviour
 {
@@ -9,12 +11,11 @@ public class God : MonoBehaviour
     void Awake() {
         datastore = this.gameObject.AddAndGetComponent<Datastore>();
         prefabs = this.gameObject.AddAndGetComponent<Prefabs>();
-        datastore.canvasParent = GameObject.Find("Canvas");
+        datastore.canvasParent = GameObject.Instantiate(prefabs.canvas);
 
-        this.gameObject.AddComponent<Mouse>();
+        this.gameObject.AddComponent<MouseAndKeyboard>();
         this.gameObject.AddComponent<Placer>();
         this.gameObject.AddComponent<ToolPicker>();
-
     }
 
     void Start() {
@@ -23,5 +24,7 @@ public class God : MonoBehaviour
         activeLevel.transform.SetParent(baseTilemap.transform);
 
         datastore.validTiles = activeLevel.GetComponent<Tilemap>();
+
+        Observable.Interval(TimeSpan.FromMilliseconds(1000)).Subscribe(_ => datastore.tickCounter.Value++);
     }
 }

@@ -25,6 +25,10 @@ public static class Utils {
         return values;
     }
 
+    public static Vector2Int ToVec2(this Vector3Int source) {
+        return new Vector2Int(source.x, source.y);
+    }
+
     public static IEnumerable<TSource> Also<TSource>(this IEnumerable<TSource> source, Action<TSource> selector) {
         source.ToList().ForEach(i => selector(i));
         return source;
