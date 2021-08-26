@@ -20,6 +20,16 @@ public class Datastore : MonoBehaviour {
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
+    //                               _
+    //                              | |
+    //   __ _  __ _ _ __ ___   ___  | | ___   ___  _ __
+    //  / _` |/ _` | '_ ` _ \ / _ \ | |/ _ \ / _ \| '_ \
+    // | (_| | (_| | | | | | |  __/ | | (_) | (_) | |_) |
+    //  \__, |\__,_|_| |_| |_|\___| |_|\___/ \___/| .__/
+    //   __/ |                                    | |
+    //  |___/                                     |_|
+    public IntReactiveProperty tickCounter = new IntReactiveProperty(0);
+    public FloatReactiveProperty spawnChance = new FloatReactiveProperty(0.1f);
 
     //  _                   _
     // (_)                 | |
@@ -29,7 +39,8 @@ public class Datastore : MonoBehaviour {
     // |_|_| |_| .__/ \__,_|\__|
     //         | |
     //         |_|
-    public ReactiveProperty<MonoBehaviour> activeTool = new ReactiveProperty<MonoBehaviour>();
+    public ReactiveProperty<ToolType?> activeTool = new ReactiveProperty<ToolType?>();
+    public ReactiveProperty<DestinationType?> activeToolColor = new ReactiveProperty<DestinationType?>();
     public MessageBroker inputEvents = new MessageBroker();
 
     //        _

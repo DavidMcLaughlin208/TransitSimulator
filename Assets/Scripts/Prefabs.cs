@@ -6,6 +6,8 @@ public class Prefabs : MonoBehaviour {
     public GameObject baseTilemapPrefab;
     public GameObject levelPrefab;
 
+    public GameObject canvas;
+
     public GameObject road;
     public GameObject lot;
     public GameObject building;
@@ -16,6 +18,8 @@ public class Prefabs : MonoBehaviour {
     void Awake() {
         baseTilemapPrefab = Resources.Load<GameObject>("Prefabs/BaseTilemap");
         levelPrefab = Resources.Load<GameObject>("Prefabs/Levels/Downtown");
+
+        canvas = Resources.Load<GameObject>("Prefabs/UI/Canvas");
 
         road = Resources.Load<GameObject>("Prefabs/CityObjects/Road");
         lot = Resources.Load<GameObject>("Prefabs/CityObjects/Lot");

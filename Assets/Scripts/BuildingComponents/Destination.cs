@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Destination : MonoBehaviour {
 
@@ -7,7 +8,7 @@ public class Destination : MonoBehaviour {
     public Lot lot;
     public Building building;
 
-    private DestinationType type; // backing field for shopType
+    private DestinationType type; // backing field for destType
     public DestinationType destType {
         get { return type; }
         set {
@@ -37,4 +38,8 @@ public enum DestinationType
     COFFEE,
     TEA,
     BEER
+}
+
+public static class DestinationUtils {
+    public static List<DestinationType> allDestTypes = new List<DestinationType> {DestinationType.COFFEE, DestinationType.TEA, DestinationType.BEER};
 }
