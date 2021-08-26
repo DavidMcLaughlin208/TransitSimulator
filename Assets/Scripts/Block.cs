@@ -55,7 +55,6 @@ public static class BlockOrientations {
         BlockOrientations.J,
         BlockOrientations.L,
         BlockOrientations.O,
-        BlockOrientations.single,
     };
 
     public static List<Vector2Int> RotateClockwise(this List<Vector2Int> blockOrientation) {
