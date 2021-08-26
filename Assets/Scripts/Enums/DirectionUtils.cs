@@ -133,10 +133,10 @@ public class DirectionUtils
             },
             {
                 RoadType.TJunction, new Dictionary<PedestrianNodeLocation, List<PedestrianNodeLocation>>() {
-                    {PedestrianNodeLocation.TR, new List<PedestrianNodeLocation>() {PedestrianNodeLocation.TL}},
-                    {PedestrianNodeLocation.TL, new List<PedestrianNodeLocation>() {PedestrianNodeLocation.TR}},
-                    {PedestrianNodeLocation.BR, new List<PedestrianNodeLocation>() {}},
-                    {PedestrianNodeLocation.BL, new List<PedestrianNodeLocation>() {}}
+                    {PedestrianNodeLocation.TR, new List<PedestrianNodeLocation>() {PedestrianNodeLocation.TL, PedestrianNodeLocation.BR}},
+                    {PedestrianNodeLocation.TL, new List<PedestrianNodeLocation>() {PedestrianNodeLocation.TR, PedestrianNodeLocation.BL}},
+                    {PedestrianNodeLocation.BR, new List<PedestrianNodeLocation>() {PedestrianNodeLocation.BL, PedestrianNodeLocation.TR}},
+                    {PedestrianNodeLocation.BL, new List<PedestrianNodeLocation>() {PedestrianNodeLocation.BR, PedestrianNodeLocation.TL}}
                 }
             },
             {

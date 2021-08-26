@@ -202,6 +202,12 @@ public class Tile : MonoBehaviour
         }
     }
 
+    public void ResetTile()
+    {
+        RemoveAllNodeConnections();
+        SetAllRoadNodesEnabled();
+    }
+
     // Direction is relative to the tile the call is coming from. So if a tile is connecting to another tile
     // to its right the direction would be East
     public Node ReceivePedestrianNodeConnectionAttempt(Direction direction, PedestrianNodeLocation location, Node externalNode)

@@ -256,6 +256,8 @@ public class Placer : MonoBehaviour
         building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
     }
 
+    // If there is no road tile at the provided origin a new road tile is created
+    // If a road tile is already present at the provided origin we reset the tile like it is new
     void PlaceRoad(Vector2Int origin) {
         if (!datastore.city.Keys.Contains(origin))
         {
@@ -275,8 +277,7 @@ public class Placer : MonoBehaviour
             if (datastore.city[origin].occupier.GetComponent<Tile>() != null)
             {
                 Tile existingTile = datastore.city[origin].occupier.GetComponent<Tile>();
-                existingTile.RemoveAllNodeConnections();
-                existingTile.SetAllRoadNodesEnabled();
+                existingTile.ResetTile();
             }
         }
     }
