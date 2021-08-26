@@ -15,8 +15,17 @@ public class ToolPicker : MonoBehaviour {
     private void Start() {
         var blockPlacerButton = datastore.canvasParent.transform.Find("BlockPlacer").GetComponent<Button>();
         MapButtonToToolType(blockPlacerButton, ToolType.BLOCK_PLACER);
-        var buildingPlacerButton = datastore.canvasParent.transform.Find("CoffeeShopPlacer").GetComponent<Button>();
-        MapButtonToToolType(buildingPlacerButton, ToolType.BUILDING_PLACER);
+        var shopPlacerButton = datastore.canvasParent.transform.Find("ShopPlacer").GetComponent<Button>();
+        MapButtonToToolType(shopPlacerButton, ToolType.SHOP_PLACER);
+        var hotelPlacerButton = datastore.canvasParent.transform.Find("HotelPlacer").GetComponent<Button>();
+        MapButtonToToolType(hotelPlacerButton, ToolType.HOTEL_PLACER);
+
+        var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
+        MapButtonToToolColor(coffeeColorButton, DestinationType.COFFEE);
+        var teaColorButton = datastore.canvasParent.transform.Find("TeaColorButton").GetComponent<Button>();
+        MapButtonToToolColor(teaColorButton, DestinationType.TEA);
+        var beerColorButton = datastore.canvasParent.transform.Find("BeerColorButton").GetComponent<Button>();
+        MapButtonToToolColor(beerColorButton, DestinationType.BEER);
     }
 
     public void MapButtonToToolType(Button button, ToolType toolType) {
@@ -32,9 +41,25 @@ public class ToolPicker : MonoBehaviour {
             }
         });
     }
+
+    public void MapButtonToToolColor(Button button, DestinationType destType) {
+        button.OnClickAsObservable().Subscribe(_ => {
+            datastore.activeToolColor.Value = destType;
+            Debug.Log("Clicked on a color button");
+        });
+
+        datastore.activeToolColor.Subscribe(e => {
+            if (e == destType) {
+                button.gameObject.GetComponent<Image>().color = ColorUtils.GetColorForDestType(destType);
+            } else {
+                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
+            }
+        });
+    }
 }
 
 public enum ToolType {
     BLOCK_PLACER,
-    BUILDING_PLACER,
+    SHOP_PLACER,
+    HOTEL_PLACER,
 }

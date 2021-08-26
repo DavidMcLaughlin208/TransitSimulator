@@ -121,19 +121,30 @@ public class Placer : MonoBehaviour
 
         datastore.inputEvents // click on an empty lot to add a random building
             .Receive<ClickEvent>()
-            .Where(_ => datastore.activeTool.Value == ToolType.BUILDING_PLACER)
+            .Where(_ => datastore.activeTool.Value == ToolType.SHOP_PLACER)
             .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
             .Subscribe(e => {
                 var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
                 var lotComponents = lot.GetBuildingComponents();
                 if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
-                    if (tempSwitchForHotelsAndShops) {
-                        PlaceHotel(e.cell.ToVec2());
-                        lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>().SpawnPedestrian(DestinationType.COFFEE);
-                    } else {
-                        PlaceShop(e.cell.ToVec2());
-                    }
-                    tempSwitchForHotelsAndShops = !tempSwitchForHotelsAndShops;
+                    PlaceShop(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
+                }
+            });
+
+        datastore.inputEvents // click on an empty lot to add a random building
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.HOTEL_PLACER)
+            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Subscribe(e => {
+                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
+                var lotComponents = lot.GetBuildingComponents();
+                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
+                    PlaceHotel(e.cell.ToVec2());
+                    var generator =
+                    lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>();
+                    generator.SpawnPedestrian(DestinationType.COFFEE);
+                    generator.SpawnPedestrian(DestinationType.TEA);
+                    generator.SpawnPedestrian(DestinationType.BEER);
                 }
             });
     }
@@ -297,15 +308,15 @@ public class Placer : MonoBehaviour
         var building = PlaceAnonBuilding(origin);
         building.gameObject.name = "Hotel";
         building.AddComponent<Generator>();
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brred");
+        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
     }
 
-    void PlaceShop(Vector2Int origin) {
+    void PlaceShop(Vector2Int origin, DestinationType destType) {
         var building = PlaceAnonBuilding(origin);
         var shop = building.AddAndGetComponent<Destination>();
         building.gameObject.name = "Coffee Shop";
-        shop.destType = DestinationType.COFFEE;
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
+        shop.destType = destType;
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
     }
 
     void PlaceRoad(Vector2Int origin) {
