@@ -119,7 +119,7 @@ public class Placer : MonoBehaviour
         //                                 __/ |
         //                                |___/
 
-        datastore.inputEvents // click on an empty lot to add a random building
+        datastore.inputEvents // click on an empty lot to add a shop
             .Receive<ClickEvent>()
             .Where(_ => datastore.activeTool.Value == ToolType.SHOP_PLACER)
             .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
@@ -131,7 +131,7 @@ public class Placer : MonoBehaviour
                 }
             });
 
-        datastore.inputEvents // click on an empty lot to add a random building
+        datastore.inputEvents // click on an empty lot to add a hotel
             .Receive<ClickEvent>()
             .Where(_ => datastore.activeTool.Value == ToolType.HOTEL_PLACER)
             .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))

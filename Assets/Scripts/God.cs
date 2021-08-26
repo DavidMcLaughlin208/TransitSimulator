@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UniRx;
+using System;
 
 public class God : MonoBehaviour
 {
@@ -22,5 +24,7 @@ public class God : MonoBehaviour
         activeLevel.transform.SetParent(baseTilemap.transform);
 
         datastore.validTiles = activeLevel.GetComponent<Tilemap>();
+
+        Observable.Interval(TimeSpan.FromMilliseconds(1000)).Subscribe(_ => datastore.tickCounter.Value++);
     }
 }
