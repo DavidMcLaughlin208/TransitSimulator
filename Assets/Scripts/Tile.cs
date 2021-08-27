@@ -23,7 +23,9 @@ public class Tile : MonoBehaviour
     public GameObject roadWIN;
     public GameObject roadWOUT;
 
-    public List<Car> intersectionQueue = new List<Car>();
+    public Dictionary<Direction, List<Car>> intersectionQueue = new Dictionary<Direction, List<Car>>();
+    public Direction activeIntersectionDirection = Direction.NORTH;
+    public bool intersectionLocked = false;
 
     public int x;
     public int y;
@@ -60,6 +62,73 @@ public class Tile : MonoBehaviour
         roadNodeMap[RoadNodeLocation.SOUT].location = RoadNodeLocation.SOUT;
         roadNodeMap[RoadNodeLocation.WIN].location = RoadNodeLocation.WIN;
         roadNodeMap[RoadNodeLocation.WOUT].location = RoadNodeLocation.WOUT;
+
+        intersectionQueue.Add(Direction.NORTH, new List<Car>());
+        intersectionQueue.Add(Direction.EAST, new List<Car>());
+        intersectionQueue.Add(Direction.SOUTH, new List<Car>());
+        intersectionQueue.Add(Direction.WEST, new List<Car>());
+    }
+
+    public void Update()
+    {
+        // Sort Cars by distance
+        List<Direction> allDirections = new List<Direction>(intersectionQueue.Keys);
+        for (int i = 0; i < allDirections.Count; i++)
+        {
+            Direction dir = allDirections[i];
+            List<Car> queue = intersectionQueue[dir];
+            queue.Sort(CompareCarsByDistance);
+        }
+
+        // Notify cars cleared for intersection
+        for (int i = 0; i < intersectionQueue.Keys.Count; i++)
+        {
+            if (!intersectionLocked)
+            {
+                List<Car> currentQueue = intersectionQueue[activeIntersectionDirection];
+                if (currentQueue.Count == 0)
+                {
+                    CycleActiveIntersectionDirection();
+                    continue;
+                }
+                Car firstCar = currentQueue[0];
+                firstCar.NotifyClearedForIntersection(this);
+                intersectionLocked = true;
+                CycleActiveIntersectionDirection();
+            }
+        }
+
+        // Lock inner tiles
+
+        // notify additional cars for simultaneous intersection clearance
+    }
+
+    public void CycleActiveIntersectionDirection()
+    {
+        int index = DirectionUtils.allDirections.IndexOf(activeIntersectionDirection);
+        if (index == DirectionUtils.allDirections.Count - 1)
+        {
+            activeIntersectionDirection = DirectionUtils.allDirections[0];
+        } else
+        {
+            activeIntersectionDirection = DirectionUtils.allDirections[index + 1];
+        }
+    }
+
+    public int CompareCarsByDistance(Car left, Car right)
+    {
+        float leftDistance = Vector3.Distance(left.transform.position, this.transform.position);
+        float rightDistance = Vector3.Distance(right.transform.position, this.transform.position);
+        if (leftDistance == rightDistance)
+        {
+            return 0;
+        } else if (leftDistance > rightDistance)
+        {
+            return 1;
+        } else
+        {
+            return 0;
+        }
     }
 
     Tile GetTileFromDatastore(Vector2 coord) {
@@ -272,28 +341,36 @@ public class Tile : MonoBehaviour
         this.tileRotation = roadTypeAndRotation.rotation;
     }
 
-    public void PlaceCarInIntersectionQueue(Car car)
+    public void PlaceCarInIntersectionQueue(RoadNode node, Car car)
     {
-        if (intersectionQueue.IndexOf(car) == -1)
+        List<Car> directionalQueue = intersectionQueue[locationToDirectionMapping[node.location]];
+        if (directionalQueue.IndexOf(car) == -1)
         {
-            intersectionQueue.Add(car);
+            directionalQueue.Add(car);
         }
     }
 
-    public void RemoveCarFromIntersectionQueue(Car car)
+    public void RemoveCarFromIntersectionQueue(RoadNode node, Car car)
     {
-        intersectionQueue.Remove(car);
+        List<Car> directionalQueue = intersectionQueue[locationToDirectionMapping[node.location]];
+        directionalQueue.Remove(car);
+        intersectionLocked = false;
     }
 
-    public bool IsCarClearedForIntersection(Car car)
-    {
-        return intersectionQueue.IndexOf(car) == 0;        
-    }
+    //public bool IsCarClearedForIntersection(Car car)
+    //{
+    //    return intersectionQueue.IndexOf(car) == 0;        
+    //}
 
     public bool IsIntersection()
     {
         return roadType == RoadType.Intersection || roadType == RoadType.TJunction;
     }
+
+    public static Dictionary<RoadNodeLocation, Direction> locationToDirectionMapping = new Dictionary<RoadNodeLocation, Direction>()
+    {
+        {RoadNodeLocation.NIN, Direction.NORTH}, {RoadNodeLocation.EIN, Direction.EAST}, {RoadNodeLocation.SIN, Direction.SOUTH}, {RoadNodeLocation.WIN, Direction.WEST}
+    };
 
 
 }

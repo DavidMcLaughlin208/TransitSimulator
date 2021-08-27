@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Car : MonoBehaviour
 {
-    public static float brakingDistance = 0.5f;
+    public static float brakingDistance = 0.7f;
 
     public RoadNode homeNode;
     public RoadNode currentNode;
@@ -14,12 +15,12 @@ public class Car : MonoBehaviour
     public float speed = 0f;
     private float minSpeed = 0.3f;
     private float acceleration = 1f;
-    private float brakingForce = 27f;
+    private float brakingForce = 25f;
     public bool headingHome = false;
     public List<RoadNode> itinerary = new List<RoadNode>();
     public Curve currentCurve;
 
-    public List<RoadNode> intersectionsQueued = new List<RoadNode>();
+    public List<(RoadNode, bool)> intersectionsQueued = new List<(RoadNode, bool)>();
 
     public GameObject originGO;
     public GameObject intermediateGO;
@@ -33,6 +34,13 @@ public class Car : MonoBehaviour
         public Vector2 intermediatePoint;
         public float currentPlace;
         public float distance;
+
+        public Vector2 GetCurrentPosition()
+        {
+            Vector2 line1Lerp = Vector2.Lerp(originPoint, intermediatePoint, currentPlace);
+            Vector2 line2Lerp = Vector2.Lerp(intermediatePoint, targetPoint, currentPlace);
+            return Vector2.Lerp(line1Lerp, line2Lerp, currentPlace);
+        }
     }
 
     // Start is called before the first frame update
@@ -58,7 +66,7 @@ public class Car : MonoBehaviour
             //intermediateGO.transform.position = currentCurve.intermediatePoint;
             speed = CalculateSpeed(speed);
             
-            transform.position = CalculateLerpedPosition(currentCurve);
+            transform.position = currentCurve.GetCurrentPosition();
             float lerpIncrease = 1 / (currentCurve.distance / speed) * Time.deltaTime;
             currentCurve.currentPlace = Mathf.Min(currentCurve.currentPlace + lerpIncrease, 1f);
             //transform.position = Vector2.MoveTowards(transform.position, target.transform.position, step);
@@ -107,11 +115,13 @@ public class Car : MonoBehaviour
         currentCurve.targetPoint = itinerary[1].transform.position;
         currentCurve.currentPlace = 0;
         
-        float distance = Vector2.Distance(currentCurve.originPoint, currentCurve.targetPoint);
-        currentCurve.distance = distance;
+        float tempDistance = Vector2.Distance(currentCurve.originPoint, currentCurve.targetPoint);
         Vector2 direction = DirectionUtils.RoadUtils.nodeLocationVectors[((RoadNode)itinerary[0]).location];
-        Vector2 intermediate = currentCurve.originPoint + direction * (distance / 2);// Mathf.Sqrt(2));
+        Vector2 intermediate = currentCurve.originPoint + direction * (tempDistance / 2);// Mathf.Sqrt(2));
         currentCurve.intermediatePoint = intermediate;
+
+
+        currentCurve.distance = Utils.getLengthOfQuadraticCurve(currentCurve, 20);
     }
 
     public void SetNewCurrentNode(RoadNode newNode)
@@ -119,9 +129,9 @@ public class Car : MonoBehaviour
         if (currentNode != null)
         {
             ((RoadNode)currentNode).RemoveCar(this);
-            if (intersectionsQueued.IndexOf(currentNode) == 0)
+            if (intersectionsQueued.Count > 0 && intersectionsQueued[0].Item1 == currentNode)
             {
-                intersectionsQueued[0].RemoveCarFromIntersectionQueue(this);
+                currentNode.RemoveCarFromIntersectionQueue(this);
                 intersectionsQueued.RemoveAt(0);
             }
             itinerary.RemoveAt(0);
@@ -132,15 +142,8 @@ public class Car : MonoBehaviour
         if (itinerary.Count >= 3 && itinerary[2].IsIntersectionNode())
         {
             itinerary[2].PlaceCarInIntersectionQueue(this);
-            intersectionsQueued.Add(itinerary[2]);
+            intersectionsQueued.Add((itinerary[2], false));
         }
-    }
-
-    public Vector2 CalculateLerpedPosition(Curve curve)
-    {
-        Vector2 line1Lerp = Vector2.Lerp(currentCurve.originPoint, currentCurve.intermediatePoint, currentCurve.currentPlace);
-        Vector2 line2Lerp = Vector2.Lerp(currentCurve.intermediatePoint, currentCurve.targetPoint, currentCurve.currentPlace);
-        return Vector2.Lerp(line1Lerp, line2Lerp, currentCurve.currentPlace);
     }
 
     public float CalculateSpeed(float currentSpeed)
@@ -172,8 +175,9 @@ public class Car : MonoBehaviour
         float approachingIntersectionCalcSpeed = 100f;
         for (int i = 0; i < intersectionsQueued.Count; i++)
         {
-            RoadNode intersectionNode = intersectionsQueued[0];
-            bool clearedForIntersection = intersectionNode.ClearedForIntersection(this);
+            
+            RoadNode intersectionNode = intersectionsQueued[0].Item1;
+            bool clearedForIntersection = intersectionsQueued[0].Item2;
             if (!clearedForIntersection)
             {
                 float distance = Vector2.Distance(transform.position, intersectionNode.transform.position);
@@ -183,7 +187,7 @@ public class Car : MonoBehaviour
                     approachingIntersectionCalcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
                     decelerated = true;
                     Vector3 targetStoppingLocation = DirectionUtils.RoadUtils.nodeLocationVectors[intersectionNode.location] * -1 * 0.15f + (Vector2) intersectionNode.transform.position;
-                    if (Vector3.Distance(transform.position, targetStoppingLocation) > 0.01)
+                    if (Vector3.Distance(transform.position, targetStoppingLocation) > 0.2)
                     {
                         approachingIntersectionCalcSpeed = Mathf.Max(approachingIntersectionCalcSpeed, minSpeed);
                     }
@@ -199,6 +203,13 @@ public class Car : MonoBehaviour
         }
         
         return calcSpeed;
+    }
+
+    public void NotifyClearedForIntersection(Tile tile)
+    {
+        (RoadNode, bool) intersection = intersectionsQueued.Where(t => t.Item1.owningTile == tile).ToList()[0];
+        int index = intersectionsQueued.IndexOf(intersection);
+        intersectionsQueued[index] = (intersection.Item1, true);
     }
 
     public void CalculateItinerary()
@@ -254,7 +265,7 @@ public class Car : MonoBehaviour
                         if (this.itinerary[m].IsIntersectionNode())
                         {
                             itinerary[m].PlaceCarInIntersectionQueue(this);
-                            this.intersectionsQueued.Add(itinerary[m]);
+                            intersectionsQueued.Add((itinerary[m], false));
                         }
                     }
 

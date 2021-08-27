@@ -30,7 +30,7 @@ public enum Rotation
 public class DirectionUtils
 {
     public static List<Direction> allDirections = new List<Direction>() {
-        Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
+        Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
     };
 
     public static Dictionary<Direction, Rotation> generalRotationMapping = new Dictionary<Direction, Rotation>() {
