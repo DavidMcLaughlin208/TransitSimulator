@@ -8,7 +8,7 @@ public class Pedestrian : MonoBehaviour
     public Node currentNode;
     public List<Node> itinerary = new List<Node>();
     public DestinationType desiredDestType;
-    public float speed = 0.1f;
+    public float speed = 2f;
     public bool headingHome = false;
 
     // Start is called before the first frame update

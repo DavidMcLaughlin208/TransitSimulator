@@ -13,12 +13,15 @@ public class ToolPicker : MonoBehaviour {
     }
 
     private void Start() {
+        var handButton = datastore.canvasParent.transform.Find("Hand").GetComponent<Button>();
+        MapButtonToToolType(handButton, ToolType.HAND);
         var blockPlacerButton = datastore.canvasParent.transform.Find("BlockPlacer").GetComponent<Button>();
         MapButtonToToolType(blockPlacerButton, ToolType.BLOCK_PLACER);
         var shopPlacerButton = datastore.canvasParent.transform.Find("ShopPlacer").GetComponent<Button>();
         MapButtonToToolType(shopPlacerButton, ToolType.SHOP_PLACER);
         var hotelPlacerButton = datastore.canvasParent.transform.Find("HotelPlacer").GetComponent<Button>();
         MapButtonToToolType(hotelPlacerButton, ToolType.HOTEL_PLACER);
+        
 
         var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
         MapButtonToToolColor(coffeeColorButton, DestinationType.COFFEE);
@@ -26,6 +29,8 @@ public class ToolPicker : MonoBehaviour {
         MapButtonToToolColor(teaColorButton, DestinationType.TEA);
         var beerColorButton = datastore.canvasParent.transform.Find("BeerColorButton").GetComponent<Button>();
         MapButtonToToolColor(beerColorButton, DestinationType.BEER);
+
+        datastore.activeTool.Value = ToolType.HAND;
     }
 
     public void MapButtonToToolType(Button button, ToolType toolType) {
@@ -59,6 +64,7 @@ public class ToolPicker : MonoBehaviour {
 }
 
 public enum ToolType {
+    HAND,
     BLOCK_PLACER,
     SHOP_PLACER,
     HOTEL_PLACER,

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Node : MonoBehaviour
 {
+    public Tile owningTile;
     public List<Node> connections = new List<Node>();
     public LineRenderer line;
     public string color = "";
