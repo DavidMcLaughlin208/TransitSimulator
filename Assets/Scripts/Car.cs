@@ -12,8 +12,9 @@ public class Car : MonoBehaviour
     public DestinationType desiredDestType;
     public float maxSpeed = 1f;
     public float speed = 0f;
-    public float acceleration = 0.01f;
-    public float brakingForce = 0.8f;
+    private float minSpeed = 0.3f;
+    private float acceleration = 1f;
+    private float brakingForce = 27f;
     public bool headingHome = false;
     public List<RoadNode> itinerary = new List<RoadNode>();
     public Curve currentCurve;
@@ -151,6 +152,7 @@ public class Car : MonoBehaviour
         List<Car> neighboringCars = currentNode.GetCarsAfterCar(this);
         neighboringCars.AddRange(targetNode.cars);
         float minDistance = 100;
+        float nearbyCarCalcSpeed = 100f;
         for (int i = 0; i < neighboringCars.Count; i++)
         {
             Car neighboringCar = neighboringCars[i];
@@ -158,11 +160,16 @@ public class Car : MonoBehaviour
             if (distance < minDistance && distance < brakingDistance)
             {
                 minDistance = distance;
-                float scaledBrakingForce = (brakingDistance - distance) * brakingForce;
-                calcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
+                float scaledBrakingForce = (brakingDistance - distance) * brakingForce * Time.deltaTime;
+                nearbyCarCalcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
+                if (distance > 0.35)
+                {
+                    nearbyCarCalcSpeed = Mathf.Max(nearbyCarCalcSpeed, minSpeed);
+                }
                 decelerated = true;
             }
         }
+        float approachingIntersectionCalcSpeed = 100f;
         for (int i = 0; i < intersectionsQueued.Count; i++)
         {
             RoadNode intersectionNode = intersectionsQueued[0];
@@ -172,17 +179,23 @@ public class Car : MonoBehaviour
                 float distance = Vector2.Distance(transform.position, intersectionNode.transform.position);
                 if (distance < brakingDistance)
                 {
-                    float scaledBrakingForce = (brakingDistance - distance) * brakingForce;
-                    calcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
+                    float scaledBrakingForce = (brakingDistance - distance) * brakingForce * Time.deltaTime;
+                    approachingIntersectionCalcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
                     decelerated = true;
+                    Vector3 targetStoppingLocation = DirectionUtils.RoadUtils.nodeLocationVectors[intersectionNode.location] * -1 * 0.15f + (Vector2) intersectionNode.transform.position;
+                    if (Vector3.Distance(transform.position, targetStoppingLocation) > 0.01)
+                    {
+                        approachingIntersectionCalcSpeed = Mathf.Max(approachingIntersectionCalcSpeed, minSpeed);
+                    }
                 }
             }
         }
+        calcSpeed = Mathf.Min(nearbyCarCalcSpeed, approachingIntersectionCalcSpeed);
         
         
         if (!decelerated)
         {
-            calcSpeed = Mathf.Min(currentSpeed + acceleration, maxSpeed);
+            calcSpeed = Mathf.Min(currentSpeed + acceleration * Time.deltaTime, maxSpeed);
         }
         
         return calcSpeed;
@@ -236,6 +249,15 @@ public class Car : MonoBehaviour
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
                     targetNode = itinerary[1];
+                    for (int m = 0; m < 2; m++)
+                    {
+                        if (this.itinerary[m].IsIntersectionNode())
+                        {
+                            itinerary[m].PlaceCarInIntersectionQueue(this);
+                            this.intersectionsQueued.Add(itinerary[m]);
+                        }
+                    }
+
                     return;
                 }
             }

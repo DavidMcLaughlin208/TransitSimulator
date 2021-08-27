@@ -382,7 +382,7 @@ public class Placer : MonoBehaviour
     {
         if (datastore.city.Keys.Contains(origin) && datastore.city[origin].occupier != null && datastore.city[origin].occupier.GetComponent<Tile>() != null)
         {
-            if (Random.Range(0, 10) > 6)
+            if (Random.Range(0, 10) > 3)
             {
                 Tile road = datastore.city[origin].occupier.GetComponent<Tile>();
                 List<RoadNode> allRoadNodes = new List<RoadNode>(road.roadNodeMap.Values);
