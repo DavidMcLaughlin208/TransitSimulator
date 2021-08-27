@@ -30,6 +30,7 @@ public class Datastore : MonoBehaviour {
     //  |___/                                     |_|
     public IntReactiveProperty tickCounter = new IntReactiveProperty(0);
     public FloatReactiveProperty spawnChance = new FloatReactiveProperty(0.1f);
+    public int baseCapacity = 10;
 
     //  _                   _
     // (_)                 | |

@@ -21,7 +21,7 @@ public class ToolPicker : MonoBehaviour {
         MapButtonToToolType(shopPlacerButton, ToolType.SHOP_PLACER);
         var hotelPlacerButton = datastore.canvasParent.transform.Find("HotelPlacer").GetComponent<Button>();
         MapButtonToToolType(hotelPlacerButton, ToolType.HOTEL_PLACER);
-        
+
 
         var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
         MapButtonToToolColor(coffeeColorButton, DestinationType.COFFEE);
@@ -50,7 +50,6 @@ public class ToolPicker : MonoBehaviour {
     public void MapButtonToToolColor(Button button, DestinationType destType) {
         button.OnClickAsObservable().Subscribe(_ => {
             datastore.activeToolColor.Value = destType;
-            Debug.Log("Clicked on a color button");
         });
 
         datastore.activeToolColor.Subscribe(e => {
