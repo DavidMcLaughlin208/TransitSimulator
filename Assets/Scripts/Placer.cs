@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
 using System.Linq;
+using System.Globalization;
 
 public class Placer : MonoBehaviour
 {
@@ -147,6 +148,18 @@ public class Placer : MonoBehaviour
                     generator.SpawnPedestrian(DestinationType.COFFEE);
                     generator.SpawnPedestrian(DestinationType.TEA);
                     generator.SpawnPedestrian(DestinationType.BEER);
+                }
+            });
+
+        datastore.inputEvents
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.APARTMENT_PLACER)
+            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Subscribe(e => {
+                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
+                var lotComponents = lot.GetBuildingComponents();
+                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
+                    PlaceApartment(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
                 }
             });
     }
@@ -316,8 +329,41 @@ public class Placer : MonoBehaviour
     void PlaceShop(Vector2Int origin, DestinationType destType) {
         var building = PlaceAnonBuilding(origin);
         var shop = building.AddAndGetComponent<Destination>();
-        building.gameObject.name = "Coffee Shop";
+        building.gameObject.name = $"{destType.ToString()} Shop";
         shop.destType = destType;
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
+    }
+
+    void PlaceApartment(Vector2Int origin, DestinationType destType) {
+        var building = PlaceAnonBuilding(origin);
+        var apartment = building.AddAndGetComponent<Residence>();
+        building.gameObject.name = $"{destType.ToString()} Apartment";
+        apartment.housingType = destType;
+        var nearbyLots = datastore.city.GetAllOccupiedLotsByDistance(building.transform.position);
+        var hotels = nearbyLots
+            .Where(lot => {
+                return lot != building.GetComponent<Building>().parentLot && lot.GetBuildingComponents()[typeof(Generator)] != null;
+            })
+            .Select(lot => lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>());
+
+        var peds = hotels.Aggregate(new List<Pedestrian>(), (agg, hotel) => {
+            if (agg.Count() < datastore.baseCapacity) {
+                var childPedestrians = hotel.transform.Cast<Transform>()
+                    // technically all children of a hotel are pedestrians for now... but this is a safe case for the future
+                    .Where(child => child.GetComponent<Pedestrian>() != null && child.GetComponent<Pedestrian>().desiredDestType == destType)
+                    .Take(datastore.baseCapacity - agg.Count())
+                    .Select(child => child.GetComponent<Pedestrian>());
+                agg.AddRange(childPedestrians);
+            }
+            return agg;
+        });
+
+        peds.ForEach(child => {
+            child.transform.parent.parent.GetComponent<Lot>().GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>().pedCapacity[destType]--;
+            child.transform.parent = building.transform;
+            child.homeNode = building.GetComponent<Building>().parentLot.entranceNode;
+        });
+
         building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
     }
 

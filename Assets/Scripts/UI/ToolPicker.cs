@@ -1,7 +1,5 @@
-using System.Data;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 using UniRx;
 
 public class ToolPicker : MonoBehaviour {
@@ -21,6 +19,8 @@ public class ToolPicker : MonoBehaviour {
         MapButtonToToolType(shopPlacerButton, ToolType.SHOP_PLACER);
         var hotelPlacerButton = datastore.canvasParent.transform.Find("HotelPlacer").GetComponent<Button>();
         MapButtonToToolType(hotelPlacerButton, ToolType.HOTEL_PLACER);
+        var apartmentPlacerButton = datastore.canvasParent.transform.Find("ApartmentPlacer").GetComponent<Button>();
+        MapButtonToToolType(apartmentPlacerButton, ToolType.APARTMENT_PLACER);
 
 
         var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
@@ -67,4 +67,5 @@ public enum ToolType {
     BLOCK_PLACER,
     SHOP_PLACER,
     HOTEL_PLACER,
+    APARTMENT_PLACER,
 }

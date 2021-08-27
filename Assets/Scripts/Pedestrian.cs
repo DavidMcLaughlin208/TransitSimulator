@@ -36,6 +36,12 @@ public class Pedestrian : MonoBehaviour
         }
     }
 
+    public void Relocate(Building building) {
+        homeNode = building.parentLot.entranceNode;
+        headingHome = true;
+        CalculateItinerary();
+    }
+
     public void CalculateItinerary()
     {
         Dictionary<Node, int> scores = new Dictionary<Node, int>();

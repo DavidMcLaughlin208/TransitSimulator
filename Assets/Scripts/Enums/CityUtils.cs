@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,5 +63,27 @@ public static class CityUtils {
         ).Select(i => new Vector2Int(topLeftOrigin.x + i.x, topLeftOrigin.y - i.y));
 
         return allCoords.ToDictionary(i => i, i => city.ContainsKey(i) ? city[i] : null);
+    }
+
+    // TODO should this distance be calculated by nodes in mesh? Right now it's only spatial distance (based on transform centerpoint)
+    public static List<Lot> GetAllOccupiedLotsByDistance(
+        this Dictionary<Vector2Int, CityTile> city,
+        Vector2 searchOrigin
+    ) {
+        // I opted to chain all these calls through multiple variables for easier debugging in the future.
+
+        var groupedCityTiles = city.Values
+            .GroupBy(i => i.occupier); // for all city tiles in city, group up all city tiles with the same occupier...
+        var firstCityTiles = groupedCityTiles
+            .Select(group => group.First()); // and select the first (arbitrarily).
+        var allLots = firstCityTiles
+            .Where(cityTile => cityTile.nodeTile == null && cityTile.occupier.GetComponent<Lot>() != null); // filter down to all lot occupiers...
+        var orderedLots = allLots
+            .OrderBy(cityTile =>
+                Vector2.Distance(searchOrigin, (Vector2) cityTile.occupier.transform.position) // sort by distance to searchOrigin...
+            );
+        var actualLots = orderedLots
+            .Select(cityTile => cityTile.occupier.GetComponent<Lot>()); // and finally retrieve the lot from each transform.
+        return actualLots.ToList();
     }
 }
