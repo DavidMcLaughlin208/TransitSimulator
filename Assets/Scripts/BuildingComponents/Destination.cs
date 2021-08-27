@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class Destination : MonoBehaviour {
 
     public Prefabs prefabs;
+    public Datastore datastore;
 
     public Lot lot;
     public Building building;
@@ -17,8 +19,13 @@ public class Destination : MonoBehaviour {
         }
     }
 
+    public Queue<Pedestrian> pedQueue = new Queue<Pedestrian>();
+    public bool servicePending = false;
+
     public void Awake () {
-        prefabs = GameObject.Find("God").GetComponent<Prefabs>();
+        var god = GameObject.Find("God");
+        prefabs = god.GetComponent<Prefabs>();
+        datastore = god.GetComponent<Datastore>();
 
         building = this.GetComponent<Building>();
         lot = building.parentLot;
@@ -27,8 +34,24 @@ public class Destination : MonoBehaviour {
         lot.exitNode.owningBuilding = building;
     }
 
+    public void Update () {
+        if (!servicePending && pedQueue.Count > 0) {
+            StartCoroutine(QueueForSeconds(pedQueue.Dequeue(), datastore.baseQueueTime));
+        }
+    }
+
     public void ReceivePedestrian(Pedestrian pedestrian) {
+        pedQueue.Enqueue(pedestrian);
+    }
+
+    IEnumerator QueueForSeconds(Pedestrian pedestrian, int seconds) {
+        servicePending = true;
+        yield return new WaitForSeconds(seconds);
         pedestrian.headingHome = true;
+        pedestrian.transform.position = lot.exitNode.transform.position;
+        pedestrian.currentNode = lot.exitNode;
+        pedestrian.CalculateItinerary();
+        servicePending = false;
     }
 }
 

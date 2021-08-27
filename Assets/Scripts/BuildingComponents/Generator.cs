@@ -59,5 +59,8 @@ public class Generator : MonoBehaviour {
     public void ReceivePedestrian(Pedestrian pedestrian)
     {
         pedestrian.headingHome = false;
+        pedestrian.transform.position = lot.exitNode.transform.position;
+        pedestrian.currentNode = lot.exitNode;
+        pedestrian.CalculateItinerary();
     }
 }

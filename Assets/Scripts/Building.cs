@@ -18,8 +18,5 @@ public class Building : MonoBehaviour
         if (generatorComp != null) {
             generatorComp.ReceivePedestrian(pedestrian);
         }
-        pedestrian.transform.position = parentLot.exitNode.transform.position;
-        pedestrian.currentNode = parentLot.exitNode;
-        pedestrian.CalculateItinerary();
     }
 }
