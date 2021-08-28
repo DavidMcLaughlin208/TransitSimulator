@@ -35,6 +35,10 @@ public class Tile : MonoBehaviour
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
+    public int turnsLocked = 0;
+
+    public List<Car> carsLockingIntersection = new List<Car>();
+
     public void Awake()
     {
         datastore = GameObject.Find("God").GetComponent<Datastore>();
@@ -109,12 +113,19 @@ public class Tile : MonoBehaviour
                 int alreadyLockedTiles = desiredTilesToLock.Where(intersectionTile => intersectionInnerTileLocks[intersectionTile]).Count();
                 if (alreadyLockedTiles > 0)
                 {
+                    turnsLocked++;
+                    if (turnsLocked > 1000)
+                    {
+                        Debug.Log("Shits locked");
+                    }
                     break;
                 }
                 else
                 {
+                    turnsLocked = 0;
                     desiredTilesToLock.ForEach(intersectionTile => intersectionInnerTileLocks[intersectionTile] = true);
                     firstCar.NotifyClearedForIntersection(this, desiredTilesToLock);
+                    carsLockingIntersection.Add(firstCar);
                 }
                 
 
@@ -382,6 +393,7 @@ public class Tile : MonoBehaviour
         directionalQueue.Remove(car);
         intersectionLocked = false;
         tilesToRelease.ForEach(intersectionTile => intersectionInnerTileLocks[intersectionTile] = false);
+        carsLockingIntersection.Remove(car);
     }
 
     //public bool IsCarClearedForIntersection(Car car)

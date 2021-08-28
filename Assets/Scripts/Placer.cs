@@ -8,6 +8,8 @@ public class Placer : MonoBehaviour
     Datastore datastore;
     Prefabs prefabs;
 
+    public static int carCount = 0;
+
     List<Vector2Int> roadOutlines = new List<Vector2Int>();
     List<Vector2Int> nextBlockOrientation = BlockOrientations.L;
     bool tempSwitchForHotelsAndShops = false;
@@ -399,6 +401,7 @@ public class Placer : MonoBehaviour
                     car.SetNewCurrentNode((RoadNode)roadNode);
                     car.homeNode = (RoadNode)roadNode;
                     car.desiredDestType = destType;
+                    carCount++;
                     break;
                 }
             }

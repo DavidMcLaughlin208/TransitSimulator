@@ -6,6 +6,8 @@ using System.Linq;
 public class Car : MonoBehaviour
 {
     public static float brakingDistance = 0.7f;
+    public static float targetStoppingDistance = 0.35f;
+    public static int intersectionNodeLookaheadCount = 2;
 
     public RoadNode homeNode;
     public RoadNode currentNode;
@@ -28,6 +30,8 @@ public class Car : MonoBehaviour
     public GameObject targetGO;
     public Vector2 previousPos;
 
+    public SpriteRenderer carBodySprite;
+
     public struct Curve
     {
         public Vector2 originPoint;
@@ -47,7 +51,8 @@ public class Car : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
+        //GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
+        carBodySprite.color = ColorUtils.GetColorForDestType(desiredDestType);
         originGO = transform.Find("OriginPoint").gameObject;
         intermediateGO = transform.Find("IntermediatePoint").gameObject;
         targetGO = transform.Find("TargetPoint").gameObject;
@@ -70,7 +75,6 @@ public class Car : MonoBehaviour
             transform.position = currentCurve.GetCurrentPosition();
             float lerpIncrease = 1 / (currentCurve.distance / speed) * Time.deltaTime;
             currentCurve.currentPlace = Mathf.Min(currentCurve.currentPlace + lerpIncrease, 1f);
-            //transform.position = Vector2.MoveTowards(transform.position, target.transform.position, step);
 
 
             float turnStrength = 15;
@@ -81,7 +85,6 @@ public class Car : MonoBehaviour
                 direction.Normalize();
                 float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
                 Quaternion rotation = Quaternion.AngleAxis(angle + offset, Vector3.forward);
-                //transform.rotation = rotation;
                 transform.rotation = Quaternion.Lerp(transform.rotation, rotation, Time.deltaTime * turnStrength);
             }
 
@@ -95,12 +98,7 @@ public class Car : MonoBehaviour
                     CalculateItinerary();
                     SetNewCurve();
                 }
-                targetNode = itinerary[1];
-                if (targetNode.IsIntersectionNode())
-                {
-                    
-                }
-
+                targetNode = itinerary[1];                
             }
         }
         previousPos = transform.position;
@@ -135,16 +133,19 @@ public class Car : MonoBehaviour
                 currentNode.RemoveCarFromIntersectionQueue(this, currentlyLockedTiles);
                 currentlyLockedTiles.Clear();
                 intersectionsQueued.RemoveAt(0);
+            } else if (currentNode.IsIntersectionNode())
+            {
+                Debug.Log("Not removing self");
             }
             itinerary.RemoveAt(0);
         }
         currentNode = newNode;
         ((RoadNode)currentNode).AddCar(this);
 
-        if (itinerary.Count >= 3 && itinerary[2].IsIntersectionNode())
+        if (itinerary.Count >= intersectionNodeLookaheadCount && itinerary[intersectionNodeLookaheadCount - 1].IsIntersectionNode())
         {
-            itinerary[2].PlaceCarInIntersectionQueue(this);
-            intersectionsQueued.Add((itinerary[2], false));
+            itinerary[intersectionNodeLookaheadCount - 1].PlaceCarInIntersectionQueue(this);
+            intersectionsQueued.Add((itinerary[intersectionNodeLookaheadCount - 1], false));
         }
     }
 
@@ -153,27 +154,33 @@ public class Car : MonoBehaviour
         float calcSpeed = currentSpeed;
         bool decelerated = false;
 
-
+        // Check position of all cars in the current node and next node and brake if they are too close
         List<Car> neighboringCars = currentNode.GetCarsAfterCar(this);
         neighboringCars.AddRange(targetNode.cars);
-        float minDistance = 100;
-        float nearbyCarCalcSpeed = 100f;
+
+        float minDistanceForBraking = 100;
+        float minDistanceForAllNearbyCars = 100;
+        float nearbyCarCalcSpeed = 100;
         for (int i = 0; i < neighboringCars.Count; i++)
         {
             Car neighboringCar = neighboringCars[i];
             float distance = Vector2.Distance(transform.position, neighboringCar.transform.position);
-            if (distance < minDistance && distance < brakingDistance)
+            minDistanceForAllNearbyCars = Mathf.Min(minDistanceForAllNearbyCars, distance);
+            if (distance < minDistanceForBraking && distance < brakingDistance)
             {
-                minDistance = distance;
+                minDistanceForBraking = distance;
                 float scaledBrakingForce = (brakingDistance - distance) * brakingForce * Time.deltaTime;
                 nearbyCarCalcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
-                if (distance > 0.35)
+                if (distance > targetStoppingDistance)
                 {
                     nearbyCarCalcSpeed = Mathf.Max(nearbyCarCalcSpeed, minSpeed);
-                }
+                } 
                 decelerated = true;
             }
         }
+
+        // If approaching an intersection the car is not cleared for calculate desired speed
+        // by applying braking force
         float approachingIntersectionCalcSpeed = 100f;
         for (int i = 0; i < intersectionsQueued.Count; i++)
         {
@@ -196,9 +203,13 @@ public class Car : MonoBehaviour
                 }
             }
         }
+
+        // We have calculated desired speed by applying braking force based on close
+        // neighboring cars and intersections, here we actually use the slower of the two speeds
+        // This ensures over time the car will stop appropriately at the closer obstacle
         calcSpeed = Mathf.Min(nearbyCarCalcSpeed, approachingIntersectionCalcSpeed);
-        
-        
+
+
         if (!decelerated)
         {
             calcSpeed = Mathf.Min(currentSpeed + acceleration * Time.deltaTime, maxSpeed);
@@ -286,14 +297,14 @@ public class Car : MonoBehaviour
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
                     targetNode = itinerary[1];
-                    for (int m = 0; m < 2; m++)
-                    {
-                        if (this.itinerary[m].IsIntersectionNode())
-                        {
-                            itinerary[m].PlaceCarInIntersectionQueue(this);
-                            intersectionsQueued.Add((itinerary[m], false));
-                        }
-                    }
+                    for (int m = 0; m < intersectionNodeLookaheadCount - 1; m++)
+                    //{
+                    //    if (this.itinerary[m].IsIntersectionNode())
+                    //    {
+                    //        itinerary[m].PlaceCarInIntersectionQueue(this);
+                    //        intersectionsQueued.Add((itinerary[m], false));
+                    //    }
+                    //}
 
                     return;
                 }
