@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public enum Direction
 {
@@ -412,6 +413,107 @@ public class DirectionUtils
             }
             return result;
         }
+    }
+
+    public static class IntersectionUtils
+    {
+        public enum Turn
+        {
+            STRAIGHT,
+            RIGHT,
+            LEFT
+        }
+
+        public static Dictionary<Turn, List<IntersectionTile>> turnsToTileLockMapping = new Dictionary<Turn, List<IntersectionTile>>()
+        {
+            {Turn.STRAIGHT, new List<IntersectionTile>() {IntersectionTile.BR, IntersectionTile.TR} },
+            {Turn.RIGHT, new List<IntersectionTile>() {IntersectionTile.BR} },
+            {Turn.LEFT, new List<IntersectionTile>() {IntersectionTile.BR, IntersectionTile.TR, IntersectionTile.TL} }
+        };
+
+        public static Dictionary<Direction, Dictionary<IntersectionTile, IntersectionTile>> rotatedTurnTileLockMapping = new Dictionary<Direction, Dictionary<IntersectionTile, IntersectionTile>>()
+        {
+            {Direction.SOUTH, new Dictionary<IntersectionTile, IntersectionTile>()
+                {
+                    {IntersectionTile.TL, IntersectionTile.TL},
+                    {IntersectionTile.TR, IntersectionTile.TR},
+                    {IntersectionTile.BL, IntersectionTile.BL},
+                    {IntersectionTile.BR, IntersectionTile.BR}
+                }
+            },
+            {Direction.WEST, new Dictionary<IntersectionTile, IntersectionTile>()
+                {
+                    {IntersectionTile.TL, IntersectionTile.TR},
+                    {IntersectionTile.TR, IntersectionTile.BR},
+                    {IntersectionTile.BL, IntersectionTile.TL},
+                    {IntersectionTile.BR, IntersectionTile.BL}
+                }
+            },
+            {Direction.NORTH, new Dictionary<IntersectionTile, IntersectionTile>()
+                {
+                    {IntersectionTile.TL, IntersectionTile.BR},
+                    {IntersectionTile.TR, IntersectionTile.BL},
+                    {IntersectionTile.BL, IntersectionTile.TR},
+                    {IntersectionTile.BR, IntersectionTile.TL}
+                }
+            },
+            {Direction.EAST, new Dictionary<IntersectionTile, IntersectionTile>()
+                {
+                    {IntersectionTile.TL, IntersectionTile.BL},
+                    {IntersectionTile.TR, IntersectionTile.TL},
+                    {IntersectionTile.BL, IntersectionTile.BR},
+                    {IntersectionTile.BR, IntersectionTile.TR}
+                }
+            },
+        };
+
+        public static List<IntersectionTile> GetTileLockForTurnTypeAndDirection(Turn turnType, Direction dir)
+        {
+            List<IntersectionTile> unrotatedTiles = turnsToTileLockMapping[turnType];
+            List<IntersectionTile> rotatedTiles = unrotatedTiles.Select(tile => rotatedTurnTileLockMapping[dir][tile]).ToList();
+            return rotatedTiles;
+        }
+
+        public static Dictionary<RoadNodeLocation, Direction> locationToDirectionMapping = new Dictionary<RoadNodeLocation, Direction>()
+        {
+            {RoadNodeLocation.SIN, Direction.SOUTH },
+            {RoadNodeLocation.WIN, Direction.WEST },
+            {RoadNodeLocation.NIN, Direction.NORTH },
+            {RoadNodeLocation.EIN, Direction.EAST }
+        };
+
+        public static Dictionary<(RoadNodeLocation, RoadNodeLocation), Turn> nodeToTurnMapping = new Dictionary<(RoadNodeLocation, RoadNodeLocation), Turn>()
+        {
+            {(RoadNodeLocation.SIN, RoadNodeLocation.NOUT), Turn.STRAIGHT },
+            {(RoadNodeLocation.SIN, RoadNodeLocation.EOUT), Turn.RIGHT },
+            {(RoadNodeLocation.SIN, RoadNodeLocation.WOUT), Turn.LEFT },
+
+            {(RoadNodeLocation.WIN, RoadNodeLocation.EOUT), Turn.STRAIGHT },
+            {(RoadNodeLocation.WIN, RoadNodeLocation.SOUT), Turn.RIGHT },
+            {(RoadNodeLocation.WIN, RoadNodeLocation.NOUT), Turn.LEFT },
+
+            {(RoadNodeLocation.NIN, RoadNodeLocation.SOUT), Turn.STRAIGHT },
+            {(RoadNodeLocation.NIN, RoadNodeLocation.WOUT), Turn.RIGHT },
+            {(RoadNodeLocation.NIN, RoadNodeLocation.EOUT), Turn.LEFT },
+
+            {(RoadNodeLocation.EIN, RoadNodeLocation.WOUT), Turn.STRAIGHT },
+            {(RoadNodeLocation.EIN, RoadNodeLocation.NOUT), Turn.RIGHT },
+            {(RoadNodeLocation.EIN, RoadNodeLocation.SOUT), Turn.LEFT }
+        };
+
+        public static Turn GetTurnTypeForNodeLocations((RoadNodeLocation, RoadNodeLocation) nodeTuple)
+        {
+            if (nodeToTurnMapping.ContainsKey(nodeTuple))
+            {
+                return nodeToTurnMapping[nodeTuple];
+            } else
+            {
+                Debug.Log("Lacking Tuple: " + nodeTuple.Item1 + ", " + nodeTuple.Item2);
+                return Turn.STRAIGHT;
+            }
+            
+        }
+
     }
 }
 

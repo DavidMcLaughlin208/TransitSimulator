@@ -23,9 +23,12 @@ public class Tile : MonoBehaviour
     public GameObject roadWIN;
     public GameObject roadWOUT;
 
+    // Intersection related datastructures
     public Dictionary<Direction, List<Car>> intersectionQueue = new Dictionary<Direction, List<Car>>();
     public Direction activeIntersectionDirection = Direction.NORTH;
     public bool intersectionLocked = false;
+    //public List<Car> carsWithIntersectionLock = new List<Car>();
+    public Dictionary<IntersectionTile, bool> intersectionInnerTileLocks = new Dictionary<IntersectionTile, bool>();
 
     public int x;
     public int y;
@@ -63,10 +66,16 @@ public class Tile : MonoBehaviour
         roadNodeMap[RoadNodeLocation.WIN].location = RoadNodeLocation.WIN;
         roadNodeMap[RoadNodeLocation.WOUT].location = RoadNodeLocation.WOUT;
 
+        // Setup queues for intersection coming from each direction
         intersectionQueue.Add(Direction.NORTH, new List<Car>());
         intersectionQueue.Add(Direction.EAST, new List<Car>());
         intersectionQueue.Add(Direction.SOUTH, new List<Car>());
         intersectionQueue.Add(Direction.WEST, new List<Car>());
+
+        intersectionInnerTileLocks.Add(IntersectionTile.TL, false);
+        intersectionInnerTileLocks.Add(IntersectionTile.TR, false);
+        intersectionInnerTileLocks.Add(IntersectionTile.BL, false);
+        intersectionInnerTileLocks.Add(IntersectionTile.BR, false);
     }
 
     public void Update()
@@ -83,8 +92,8 @@ public class Tile : MonoBehaviour
         // Notify cars cleared for intersection
         for (int i = 0; i < intersectionQueue.Keys.Count; i++)
         {
-            if (!intersectionLocked)
-            {
+            //if (!intersectionLocked)
+            //{
                 List<Car> currentQueue = intersectionQueue[activeIntersectionDirection];
                 if (currentQueue.Count == 0)
                 {
@@ -92,10 +101,27 @@ public class Tile : MonoBehaviour
                     continue;
                 }
                 Car firstCar = currentQueue[0];
-                firstCar.NotifyClearedForIntersection(this);
+                
                 intersectionLocked = true;
+                DirectionUtils.IntersectionUtils.Turn turnType = firstCar.GetTurn(this);
+                Direction dir = firstCar.GetDirection(this);
+                List<IntersectionTile> desiredTilesToLock = DirectionUtils.IntersectionUtils.GetTileLockForTurnTypeAndDirection(turnType, dir);
+                int alreadyLockedTiles = desiredTilesToLock.Where(intersectionTile => intersectionInnerTileLocks[intersectionTile]).Count();
+                if (alreadyLockedTiles > 0)
+                {
+                    break;
+                }
+                else
+                {
+                    desiredTilesToLock.ForEach(intersectionTile => intersectionInnerTileLocks[intersectionTile] = true);
+                    firstCar.NotifyClearedForIntersection(this, desiredTilesToLock);
+                }
+                
+
+
                 CycleActiveIntersectionDirection();
-            }
+                break;
+            //}
         }
 
         // Lock inner tiles
@@ -127,7 +153,7 @@ public class Tile : MonoBehaviour
             return 1;
         } else
         {
-            return 0;
+            return -1;
         }
     }
 
@@ -350,11 +376,12 @@ public class Tile : MonoBehaviour
         }
     }
 
-    public void RemoveCarFromIntersectionQueue(RoadNode node, Car car)
+    public void RemoveCarFromIntersectionQueue(RoadNode node, Car car, List<IntersectionTile> tilesToRelease)
     {
         List<Car> directionalQueue = intersectionQueue[locationToDirectionMapping[node.location]];
         directionalQueue.Remove(car);
         intersectionLocked = false;
+        tilesToRelease.ForEach(intersectionTile => intersectionInnerTileLocks[intersectionTile] = false);
     }
 
     //public bool IsCarClearedForIntersection(Car car)

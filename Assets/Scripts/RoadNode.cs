@@ -27,9 +27,9 @@ public class RoadNode : Node
         }   
     }
 
-    public void RemoveCarFromIntersectionQueue(Car car)
+    public void RemoveCarFromIntersectionQueue(Car car, List<IntersectionTile> tilesToRelease)
     {
-        owningTile.RemoveCarFromIntersectionQueue(this, car);
+        owningTile.RemoveCarFromIntersectionQueue(this, car, tilesToRelease);
     }
 
     public void PlaceCarInIntersectionQueue(Car car)

@@ -21,6 +21,7 @@ public class Car : MonoBehaviour
     public Curve currentCurve;
 
     public List<(RoadNode, bool)> intersectionsQueued = new List<(RoadNode, bool)>();
+    public List<IntersectionTile> currentlyLockedTiles = new List<IntersectionTile>();
 
     public GameObject originGO;
     public GameObject intermediateGO;
@@ -131,7 +132,8 @@ public class Car : MonoBehaviour
             ((RoadNode)currentNode).RemoveCar(this);
             if (intersectionsQueued.Count > 0 && intersectionsQueued[0].Item1 == currentNode)
             {
-                currentNode.RemoveCarFromIntersectionQueue(this);
+                currentNode.RemoveCarFromIntersectionQueue(this, currentlyLockedTiles);
+                currentlyLockedTiles.Clear();
                 intersectionsQueued.RemoveAt(0);
             }
             itinerary.RemoveAt(0);
@@ -205,11 +207,35 @@ public class Car : MonoBehaviour
         return calcSpeed;
     }
 
-    public void NotifyClearedForIntersection(Tile tile)
+    public void NotifyClearedForIntersection(Tile tile, List<IntersectionTile> lockedTiles)
     {
         (RoadNode, bool) intersection = intersectionsQueued.Where(t => t.Item1.owningTile == tile).ToList()[0];
         int index = intersectionsQueued.IndexOf(intersection);
         intersectionsQueued[index] = (intersection.Item1, true);
+        this.currentlyLockedTiles = lockedTiles;
+    }
+
+    public DirectionUtils.IntersectionUtils.Turn GetTurn(Tile tile)
+    {
+        (RoadNode, bool) intersection = intersectionsQueued.Where(t => t.Item1.owningTile == tile).ToList()[0];
+        int index = itinerary.IndexOf(intersection.Item1);
+
+        // This is a temporary rule to prevent errors. Ideally the index would not be at the end of itinerary
+        // meaning a destination wont be in the middle of an intersection, But for testing purposes it is right now
+        // So this is just to prevent errors
+        if (index == -1 || index == itinerary.Count - 1)
+        {
+            return DirectionUtils.IntersectionUtils.Turn.STRAIGHT;
+        }
+
+        RoadNode nextNode = itinerary[index + 1];
+        return DirectionUtils.IntersectionUtils.GetTurnTypeForNodeLocations((intersection.Item1.location, nextNode.location));
+    }
+
+    public Direction GetDirection(Tile tile)
+    {
+        (RoadNode, bool) intersection = intersectionsQueued.Where(t => t.Item1.owningTile == tile).ToList()[0];
+        return DirectionUtils.IntersectionUtils.locationToDirectionMapping[intersection.Item1.location];
     }
 
     public void CalculateItinerary()
