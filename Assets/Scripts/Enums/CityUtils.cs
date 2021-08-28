@@ -86,4 +86,14 @@ public static class CityUtils {
             .Select(cityTile => cityTile.occupier.GetComponent<Lot>()); // and finally retrieve the lot from each transform.
         return actualLots.ToList();
     }
+
+    public static List<Vector2Int> GetImmediateNeighbors(
+        this Dictionary<Vector2Int, CityTile> city,
+        Vector2Int searchOrigin
+    ) {
+        return DirectionUtils.allDirections
+                .Select(dir => searchOrigin + Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[dir]))
+                .Where(coord => city.Keys.Contains(coord))
+                .ToList();
+    }
 }
