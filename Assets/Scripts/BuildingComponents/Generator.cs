@@ -1,6 +1,6 @@
 using UnityEngine;
 using UniRx;
-using System;
+using System.Collections.Generic;
 
 public class Generator : MonoBehaviour {
 
@@ -11,6 +11,12 @@ public class Generator : MonoBehaviour {
     public Building building;
 
     public System.Random random;
+
+    public Dictionary<DestinationType, int> pedCapacity = new Dictionary<DestinationType, int>() {
+        {DestinationType.COFFEE, 0},
+        {DestinationType.BEER, 0},
+        {DestinationType.TEA, 0},
+    };
 
     public void Awake () {
         var god = GameObject.Find("God");
@@ -37,6 +43,9 @@ public class Generator : MonoBehaviour {
 
     public void SpawnPedestrian(DestinationType destType)
     {
+        if (pedCapacity[destType] == datastore.baseCapacity) {
+            return;
+        }
         var pedestrianObj = GameObject.Instantiate(prefabs.pedestrian, transform);
         pedestrianObj.transform.position = lot.exitNode.transform.position;
         Pedestrian pedestrian = pedestrianObj.GetComponent<Pedestrian>();
@@ -44,10 +53,15 @@ public class Generator : MonoBehaviour {
         pedestrian.homeNode = lot.entranceNode;
         pedestrian.desiredDestType = destType;
         pedestrian.CalculateItinerary();
+        pedCapacity[destType]++;
+        datastore.allPedestrians.Add(pedestrian);
     }
 
     public void ReceivePedestrian(Pedestrian pedestrian)
     {
         pedestrian.headingHome = false;
+        pedestrian.transform.position = lot.exitNode.transform.position;
+        pedestrian.currentNode = lot.exitNode;
+        pedestrian.CalculateItinerary();
     }
 }

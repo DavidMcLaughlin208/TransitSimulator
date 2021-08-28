@@ -20,7 +20,7 @@ public class Node : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        RecalculateLinePos();
     }
 
     public void RecalculateLinePos()

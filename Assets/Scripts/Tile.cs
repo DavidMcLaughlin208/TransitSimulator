@@ -206,7 +206,10 @@ public class Tile : MonoBehaviour
                 Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
                 if (neighboringTile != null)
                 {
-                    neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
+                    var connectingNode =
+                        neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
+                    pedNodeMap[location].GetComponent<PedestrianNode>().connections.Add(connectingNode);
+
                 }
             }
         }
@@ -314,8 +317,8 @@ public class Tile : MonoBehaviour
             if (pedNodeMap.ContainsKey(nodeToConnectToLocation))
             {
                 Node nodeToConnect = pedNodeMap[nodeToConnectToLocation];
-                nodeToConnect.connections.Add(externalNode);
-                nodeToConnect.RecalculateLinePos();
+                // nodeToConnect.connections.Add(externalNode);
+                // nodeToConnect.RecalculateLinePos();
                 return nodeToConnect;
             }
         }
@@ -356,7 +359,7 @@ public class Tile : MonoBehaviour
             currentNode.RecalculateLinePos();
         }
 
-        
+
     }
 
     public void CalculateRoadType(Dictionary<Direction, bool> neighbors)
@@ -390,11 +393,6 @@ public class Tile : MonoBehaviour
     {
         tilesToRelease.ForEach(intersectionTile => intersectionInnerTileLocks[intersectionTile] = false);
     }
-
-    //public bool IsCarClearedForIntersection(Car car)
-    //{
-    //    return intersectionQueue.IndexOf(car) == 0;        
-    //}
 
     public bool IsIntersection()
     {

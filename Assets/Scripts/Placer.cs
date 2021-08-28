@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
 using System.Linq;
+using UnityEngine.UI;
 
 public class Placer : MonoBehaviour
 {
@@ -48,6 +49,10 @@ public class Placer : MonoBehaviour
     }
 
     public void Start() {
+        // debug button
+        var refreshPedButton = datastore.canvasParent.transform.Find("RefreshPed").GetComponent<Button>();
+        refreshPedButton.OnClickAsObservable().Subscribe(_ => datastore.allPedestrians.ForEach(ped => ped.CalculateItinerary()));
+
         //  _     _            _
         // | |   | |          | |
         // | |__ | | ___   ___| | __
@@ -63,20 +68,45 @@ public class Placer : MonoBehaviour
                 preview.lotOrigins
                     .Also(coord => PlaceLot(coord));
                 preview.roadCoords
-                    .Also(i => PlaceRoad(i))
-                    .Also(i => ReorientRoad(i))
+                    .Also(i => PlaceRoad(i)) // place roads for the whole block
+                    .SelectMany(i => {
+                        return datastore.city.GetImmediateNeighbors(i) // get any neighbors from an adjacent block to be refreshed
+                            .Where(i => datastore.city[i].nodeTile != null && !preview.roadCoords.Contains(i))
+                            .Concat(new List<Vector2Int> { i })
+                            .ToList();
+                    })
+                    .Also(i => datastore.city[i].nodeTile.ResetTile())
+                    .Also(i => ReorientRoad(i)) // refresh all roads that are in new block or adjacent to it
                     .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
                     .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
+                    .Also(roadCoord => {
+                        datastore.city.GetImmediateNeighbors(roadCoord)
+                            .Where(i => datastore.city[i].nodeTile == null)
+                            .Also(lotOrigin => {
+                                var lot = datastore.city[lotOrigin].occupier.GetComponent<Lot>();
+                                if (lot.entranceNode.connections.Count != 0) {
+                                    var roadTile = lot.entranceNode.connections.First().owningTile;
+                                    var coordsForConnectedTile =
+                                        datastore.city
+                                            .ToList()
+                                            .Where(kvp => kvp.Value.nodeTile == roadTile)
+                                            .First().Key;
+                                    // only refresh street connection for all roadCoords, since they have just gotten refreshed
+                                    if (coordsForConnectedTile == roadCoord) {
+                                        lot.ResetConnections();
+                                        ConnectLotToStreet(lotOrigin, roadTile);
+                                    }
+                                } else {
+                                    ConnectLotToStreet(lotOrigin); // connect lot to a random adjacent street when it is not currently connected
+                                }
+                            });
+                    })
                     .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines())
                     .Also(i => PlaceRandomDestination(i, DestinationType.COFFEE))
                     .Also(i => PlaceRandomCar(i, DestinationType.COFFEE));
-                preview.lotOrigins
-                    .Also(i => ConnectLotToStreet(i));
-                // var hotels = preview.lotOrigins.getManyRandomElements(2).Also(i => PlaceHotel(i));
-                // var shops = preview.lotOrigins.Except(hotels).Also(i => PlaceShop(i));
-                // hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
                 nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
                 preview.Cleanup();
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
         datastore.inputEvents // show the block preview on hover!
@@ -134,6 +164,7 @@ public class Placer : MonoBehaviour
                 if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
                     PlaceShop(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
                 }
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
         datastore.inputEvents // click on an empty lot to add a hotel
@@ -151,6 +182,20 @@ public class Placer : MonoBehaviour
                     generator.SpawnPedestrian(DestinationType.TEA);
                     generator.SpawnPedestrian(DestinationType.BEER);
                 }
+                datastore.gameEvents.Publish(new CityChangedEvent());
+            });
+
+        datastore.inputEvents
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.APARTMENT_PLACER)
+            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Subscribe(e => {
+                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
+                var lotComponents = lot.GetBuildingComponents();
+                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
+                    PlaceApartment(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
+                }
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
     }
 
@@ -276,8 +321,13 @@ public class Placer : MonoBehaviour
         }
     }
 
-    void ConnectLotToStreet(Vector2Int origin) {
+    void ConnectLotToStreet(Vector2Int origin, Tile? previouslyConnected = null) {
         var lot = datastore.city[origin].occupier.GetComponent<Lot>();
+
+        if (previouslyConnected != null) {
+            lot.ConnectToStreet(previouslyConnected);
+            return;
+        }
 
         var neighboringStreets = DirectionUtils.allDirections
             .ToDictionary(
@@ -295,6 +345,13 @@ public class Placer : MonoBehaviour
 
         var randomNeighboringStreet = neighboringStreets[randomDirection].getRandomElement();
         Tile neighboringTile = randomNeighboringStreet.nodeTile;
+
+        // converts cardinal direction into delta vector
+        var streetCoord = Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[
+            // turns lot rotation into the cardinal direction its facing
+            DirectionUtils.directionRotationMapping[lot.rotation][Direction.NORTH]
+        ] * -1 + origin); // reverses delta vector and normalizes to lot origin
+
         lot.ConnectToStreet(neighboringTile);
     }
 
@@ -319,8 +376,42 @@ public class Placer : MonoBehaviour
     void PlaceShop(Vector2Int origin, DestinationType destType) {
         var building = PlaceAnonBuilding(origin);
         var shop = building.AddAndGetComponent<Destination>();
-        building.gameObject.name = "Coffee Shop";
+        building.gameObject.name = $"{destType.ToString()} Shop";
         shop.destType = destType;
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
+    }
+
+    void PlaceApartment(Vector2Int origin, DestinationType destType) {
+        var building = PlaceAnonBuilding(origin);
+        var apartment = building.AddAndGetComponent<Residence>();
+        building.gameObject.name = $"{destType.ToString()} Apartment";
+        apartment.housingType = destType;
+        var nearbyLots = datastore.city.GetAllOccupiedLotsByDistance(building.transform.position);
+        var hotels = nearbyLots
+            .Where(lot => {
+                return lot != building.GetComponent<Building>().parentLot && lot.GetBuildingComponents()[typeof(Generator)] != null;
+            })
+            .Select(lot => lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>());
+
+        var peds = hotels.Aggregate(new List<Pedestrian>(), (agg, hotel) => {
+            if (agg.Count() < datastore.baseCapacity) {
+                var childPedestrians = hotel.transform.Cast<Transform>()
+                    // technically all children of a hotel are pedestrians for now... but this is a safe case for the future
+                    .Where(child => child.GetComponent<Pedestrian>() != null && child.GetComponent<Pedestrian>().desiredDestType == destType)
+                    .Take(datastore.baseCapacity - agg.Count())
+                    .Select(child => child.GetComponent<Pedestrian>());
+                agg.AddRange(childPedestrians);
+            }
+            return agg;
+        });
+
+        peds.ForEach(child => {
+            child.transform.parent.GetComponent<Generator>().pedCapacity[destType]--;
+            child.transform.parent = building.transform;
+            child.homeNode = building.GetComponent<Building>().parentLot.entranceNode;
+            child.CalculateItinerary();
+        });
+
         building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
     }
 
@@ -334,19 +425,10 @@ public class Placer : MonoBehaviour
                 datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0)),
                 Quaternion.identity
             );
-            datastore.city[origin] = new CityTile()
-            {
+            datastore.city[origin] = new CityTile() {
                 occupier = road,
                 nodeTile = road.GetComponent<Tile>()
             };
-        }
-        else
-        {
-            if (datastore.city[origin].occupier.GetComponent<Tile>() != null)
-            {
-                Tile existingTile = datastore.city[origin].occupier.GetComponent<Tile>();
-                existingTile.ResetTile();
-            }
         }
     }
 
