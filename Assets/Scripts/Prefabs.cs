@@ -17,7 +17,7 @@ public class Prefabs : MonoBehaviour {
 
     void Awake() {
         baseTilemapPrefab = Resources.Load<GameObject>("Prefabs/BaseTilemap");
-        levelPrefab = Resources.Load<GameObject>("Prefabs/Levels/Downtown");
+        levelPrefab = Resources.Load<GameObject>("Prefabs/Levels/MiniDowntown");
 
         canvas = Resources.Load<GameObject>("Prefabs/UI/Canvas");
 

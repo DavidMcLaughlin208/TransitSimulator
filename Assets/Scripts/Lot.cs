@@ -20,6 +20,15 @@ public class Lot : MonoBehaviour {
         entranceNode.destType = DestinationType.NONE;
     }
 
+    public void Start() {
+        this.transform.rotation = Quaternion.Euler(0, 0, DirectionUtils.directionToIntMapping[rotation]);
+    }
+
+    public void ResetConnections() {
+        entranceNode.connections.Clear();
+        exitNode.connections.Clear();
+    }
+
     public void ConnectToStreet(Tile neighboringTile)
     {
         Direction dir = DirectionUtils.directionRotationMapping[rotation][Direction.NORTH];
@@ -27,8 +36,10 @@ public class Lot : MonoBehaviour {
         {
             Node otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(entranceNode.location, rotation), entranceNode);
             entranceNode.connections.Add(otherNode);
+            otherNode.connections.Add(entranceNode);
             otherNode = neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, DirectionUtils.PedestrianUtils.Rotate(exitNode.location, rotation), exitNode);
             exitNode.connections.Add(otherNode);
+            otherNode.connections.Add(exitNode);
         }
     }
 
