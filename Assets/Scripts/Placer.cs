@@ -9,6 +9,7 @@ public class Placer : MonoBehaviour
     Prefabs prefabs;
 
     public static int carCount = 0;
+    public static int carMax = 100;
 
     List<Vector2Int> roadOutlines = new List<Vector2Int>();
     List<Vector2Int> nextBlockOrientation = BlockOrientations.L;
@@ -384,7 +385,7 @@ public class Placer : MonoBehaviour
     {
         if (datastore.city.Keys.Contains(origin) && datastore.city[origin].occupier != null && datastore.city[origin].occupier.GetComponent<Tile>() != null)
         {
-            if (Random.Range(0, 10) > 3)
+            if (carCount < carMax && Random.Range(0, 10) > 3)
             {
                 Tile road = datastore.city[origin].occupier.GetComponent<Tile>();
                 List<RoadNode> allRoadNodes = new List<RoadNode>(road.roadNodeMap.Values);

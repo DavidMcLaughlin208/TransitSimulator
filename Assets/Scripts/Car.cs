@@ -67,14 +67,32 @@ public class Car : MonoBehaviour
     {
         if (itinerary.Count > 0)
         {
-            //originGO.transform.position = itinerary[0].transform.position;
-            //targetGO.transform.position = itinerary[1].transform.position;
-            //intermediateGO.transform.position = currentCurve.intermediatePoint;
             speed = CalculateSpeed(speed);
             
             transform.position = currentCurve.GetCurrentPosition();
             float lerpIncrease = 1 / (currentCurve.distance / speed) * Time.deltaTime;
             currentCurve.currentPlace = Mathf.Min(currentCurve.currentPlace + lerpIncrease, 1f);
+            if (currentNode.IsIntersectionNode() && currentlyLockedTiles.Count > 0)
+            {
+                DirectionUtils.IntersectionUtils.Turn turn = GetTurn(currentNode, targetNode);
+                List<float> thresholds = DirectionUtils.IntersectionUtils.intersectionTileReleaseMapping[turn];
+                if (thresholds.Count < currentlyLockedTiles.Count)
+                {
+                    //TODO:Once destinations are not in the middle of intersections (so once we implement parking lots)
+                    // This should not be an issue and we can remove this conditional check. In the GetTurn function in
+                    // this class we return STRAIGHT as a default if
+                    // a destination is in the middle of an intersection and that can cause a mismatch here
+                }
+                else
+                {
+                    float currentThreshold = thresholds[currentlyLockedTiles.Count - 1];
+                    if (currentCurve.currentPlace > currentThreshold)
+                    {
+                        currentNode.owningTile.ReleaseTiles(new List<IntersectionTile>() { currentlyLockedTiles[0] });
+                        currentlyLockedTiles.RemoveAt(0);
+                    }
+                }
+            }
 
 
             float turnStrength = 15;
@@ -133,9 +151,6 @@ public class Car : MonoBehaviour
                 currentNode.RemoveCarFromIntersectionQueue(this, currentlyLockedTiles);
                 currentlyLockedTiles.Clear();
                 intersectionsQueued.RemoveAt(0);
-            } else if (currentNode.IsIntersectionNode())
-            {
-                Debug.Log("Not removing self");
             }
             itinerary.RemoveAt(0);
         }
@@ -240,7 +255,12 @@ public class Car : MonoBehaviour
         }
 
         RoadNode nextNode = itinerary[index + 1];
-        return DirectionUtils.IntersectionUtils.GetTurnTypeForNodeLocations((intersection.Item1.location, nextNode.location));
+        return GetTurn(intersection.Item1, nextNode);
+    }
+
+    private DirectionUtils.IntersectionUtils.Turn GetTurn(RoadNode node1, RoadNode node2)
+    {
+        return DirectionUtils.IntersectionUtils.GetTurnTypeForNodeLocations((node1.location, node2.location));
     }
 
     public Direction GetDirection(Tile tile)
@@ -297,15 +317,6 @@ public class Car : MonoBehaviour
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
                     targetNode = itinerary[1];
-                    for (int m = 0; m < intersectionNodeLookaheadCount - 1; m++)
-                    //{
-                    //    if (this.itinerary[m].IsIntersectionNode())
-                    //    {
-                    //        itinerary[m].PlaceCarInIntersectionQueue(this);
-                    //        intersectionsQueued.Add((itinerary[m], false));
-                    //    }
-                    //}
-
                     return;
                 }
             }

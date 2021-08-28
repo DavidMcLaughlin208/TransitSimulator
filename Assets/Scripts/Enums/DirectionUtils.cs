@@ -514,6 +514,13 @@ public class DirectionUtils
             
         }
 
+        public static Dictionary<Turn, List<float>> intersectionTileReleaseMapping = new Dictionary<Turn, List<float>>()
+        {
+            {Turn.STRAIGHT, new List<float>() {1f, 0.50f } },
+            {Turn.LEFT, new List<float>() {1f, 0.66f, 0.33f} },
+            {Turn.RIGHT, new List<float>() {1f} },
+        };
+
     }
 }
 
