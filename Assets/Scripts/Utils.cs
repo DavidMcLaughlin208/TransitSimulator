@@ -46,4 +46,22 @@ public static class Utils {
     public static void assignSpriteFromPath(this GameObject gameObj, string path) {
         gameObj.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(path);
     }
+
+    public static float getLengthOfQuadraticCurve(Car.Curve curve, int numPoints)
+    {
+        float originPosition = curve.currentPlace;
+        int localNumPoints = Mathf.Max(numPoints, 3);
+        float length = 0;
+        float rateIncrease = 1f / (float) localNumPoints;
+        Vector2 lastPoint = curve.GetCurrentPosition();
+        for (int i = 1; i < localNumPoints - 1; i++)
+        {
+            curve.currentPlace = i * rateIncrease;
+            Vector3 newPoint = curve.GetCurrentPosition();
+            length += Vector2.Distance(lastPoint, newPoint);
+            lastPoint = newPoint;
+        }
+        curve.currentPlace = originPosition;
+        return length;
+    }
 }

@@ -27,20 +27,20 @@ public class RoadNode : Node
         }   
     }
 
-    public void RemoveCarFromIntersectionQueue(Car car)
+    public void RemoveCarFromIntersectionQueue(Car car, List<IntersectionTile> tilesToRelease)
     {
-        owningTile.RemoveCarFromIntersectionQueue(car);
+        owningTile.RemoveCarFromIntersectionQueue(this, car, tilesToRelease);
     }
 
     public void PlaceCarInIntersectionQueue(Car car)
     {
-        owningTile.PlaceCarInIntersectionQueue(car);
+        owningTile.PlaceCarInIntersectionQueue(this, car);
     }
 
-    public bool ClearedForIntersection(Car car)
-    {
-        return owningTile.IsCarClearedForIntersection(car);
-    }
+    //public bool ClearedForIntersection(Car car)
+    //{
+    //    return owningTile.IsCarClearedForIntersection(car);
+    //}
 
     public List<Car> GetCarsAfterCar(Car car)
     {

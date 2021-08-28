@@ -287,7 +287,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dragging: 0
   dragOrigin: {x: 0, y: 0, z: 0}
-  dragSpeed: 10
   cameraSizeMax: 25
   cameraSizeMin: 2
   cameraMoveFactor: 20

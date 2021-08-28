@@ -8,7 +8,7 @@ public class CameraController : MonoBehaviour
     Datastore datastore;
     public bool dragging = false;
     public Vector3 dragOrigin;
-    public float dragSpeed = 10;
+    private float dragSpeed = 20;
 
     public float cameraSizeMax = 25;
     public float cameraSizeMin = 2;
