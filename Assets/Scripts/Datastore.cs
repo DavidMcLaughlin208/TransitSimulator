@@ -17,6 +17,7 @@ public class Datastore : MonoBehaviour {
     public Tilemap validTiles;
     public Dictionary<Vector2Int, CityTile> city = new Dictionary<Vector2Int, CityTile>();
     public Vector2Int lotScale = new Vector2Int(1, 1);
+    public List<Pedestrian> allPedestrians = new List<Pedestrian>();
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
@@ -32,6 +33,7 @@ public class Datastore : MonoBehaviour {
     public FloatReactiveProperty spawnChance = new FloatReactiveProperty(0.1f);
     public int baseCapacity = 10; // base capacity for hotels
     public int baseQueueTime = 3; // base time for shops serving peds
+    public MessageBroker gameEvents = new MessageBroker();
 
     //  _                   _
     // (_)                 | |

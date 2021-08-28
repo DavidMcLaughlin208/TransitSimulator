@@ -54,6 +54,7 @@ public class Generator : MonoBehaviour {
         pedestrian.desiredDestType = destType;
         pedestrian.CalculateItinerary();
         pedCapacity[destType]++;
+        datastore.allPedestrians.Add(pedestrian);
     }
 
     public void ReceivePedestrian(Pedestrian pedestrian)

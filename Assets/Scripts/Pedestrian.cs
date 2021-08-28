@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UniRx;
 
 public class Pedestrian : MonoBehaviour
 {
+    public Datastore datastore;
+
     public Node homeNode;
     public Node currentNode;
     public List<Node> itinerary = new List<Node>();
@@ -11,10 +14,18 @@ public class Pedestrian : MonoBehaviour
     public float speed = 2f;
     public bool headingHome = false;
 
+    public void Awake() {
+        datastore = GameObject.Find("God").GetComponent<Datastore>();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
+
+        datastore.gameEvents
+            .Receive<CityChangedEvent>()
+            .Subscribe(_ => CalculateItinerary());
     }
 
     // Update is called once per frame
@@ -34,12 +45,6 @@ public class Pedestrian : MonoBehaviour
                 }
             }
         }
-    }
-
-    public void Relocate(Building building) {
-        homeNode = building.parentLot.entranceNode;
-        headingHome = true;
-        CalculateItinerary();
     }
 
     public void CalculateItinerary()
@@ -88,11 +93,15 @@ public class Pedestrian : MonoBehaviour
                 if ((!headingHome && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode))
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
+                    if (this.itinerary.Count == 0) {
+                        Debug.Log($"reconstructed path for {this.gameObject} was set to empty");
+                    }
                     return;
                 }
             }
         }
         this.itinerary = new List<Node>();
+        Debug.Log($"itinerary for {this.gameObject} was set to empty");
     }
 
     private List<Node> ReconstructPath(Dictionary<Node, Node> cameFrom, Node neighbor)

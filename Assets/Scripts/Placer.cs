@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
 using System.Linq;
-using System.Globalization;
+using UnityEngine.UI;
 
 public class Placer : MonoBehaviour
 {
@@ -46,6 +46,10 @@ public class Placer : MonoBehaviour
     }
 
     public void Start() {
+        // debug button
+        var refreshPedButton = datastore.canvasParent.transform.Find("RefreshPed").GetComponent<Button>();
+        refreshPedButton.OnClickAsObservable().Subscribe(_ => datastore.allPedestrians.ForEach(ped => ped.CalculateItinerary()));
+
         //  _     _            _
         // | |   | |          | |
         // | |__ | | ___   ___| | __
@@ -75,6 +79,7 @@ public class Placer : MonoBehaviour
                 // hotels.Also(i => datastore.city[i].occupier.GetComponent<Lot>().GetComponentInChildren<Generator>().SpawnPedestrian(DestinationType.COFFEE));
                 nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
                 preview.Cleanup();
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
         datastore.inputEvents // show the block preview on hover!
@@ -132,6 +137,7 @@ public class Placer : MonoBehaviour
                 if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
                     PlaceShop(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
                 }
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
         datastore.inputEvents // click on an empty lot to add a hotel
@@ -149,6 +155,7 @@ public class Placer : MonoBehaviour
                     generator.SpawnPedestrian(DestinationType.TEA);
                     generator.SpawnPedestrian(DestinationType.BEER);
                 }
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
         datastore.inputEvents
@@ -161,6 +168,7 @@ public class Placer : MonoBehaviour
                 if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
                     PlaceApartment(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
                 }
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
     }
 
@@ -362,6 +370,7 @@ public class Placer : MonoBehaviour
             child.transform.parent.parent.GetComponent<Lot>().GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>().pedCapacity[destType]--;
             child.transform.parent = building.transform;
             child.homeNode = building.GetComponent<Building>().parentLot.entranceNode;
+            child.CalculateItinerary();
         });
 
         building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
