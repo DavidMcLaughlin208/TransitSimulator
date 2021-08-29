@@ -84,8 +84,8 @@ public class Placer : MonoBehaviour
                             .Where(i => datastore.city[i].nodeTile == null)
                             .Also(lotOrigin => {
                                 var lot = datastore.city[lotOrigin].occupier.GetComponent<Lot>();
-                                if (lot.entranceNode.connections.Count != 0) {
-                                    var roadTile = lot.entranceNode.connections.First().owningTile;
+                                if (lot.pedestrianEntranceNode.connections.Count != 0) {
+                                    var roadTile = lot.pedestrianEntranceNode.connections.First().owningTile;
                                     var coordsForConnectedTile =
                                         datastore.city
                                             .ToList()
@@ -194,6 +194,20 @@ public class Placer : MonoBehaviour
                 var lotComponents = lot.GetBuildingComponents();
                 if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
                     PlaceApartment(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
+                }
+                datastore.gameEvents.Publish(new CityChangedEvent());
+            });
+
+        datastore.inputEvents
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.PARKINGLOT_PLACER)
+            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Subscribe(e => {
+                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
+                var lotComponents = lot.GetBuildingComponents();
+                if (lotComponents.Values.All(i => i == null))
+                { // if this lot is empty
+                    PlaceParkingLot(e.cell.ToVec2());
                 }
                 datastore.gameEvents.Publish(new CityChangedEvent());
             });
@@ -373,9 +387,17 @@ public class Placer : MonoBehaviour
         building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
     }
 
+    void PlaceParkingLot(Vector2Int origin)
+    {
+        var building = PlaceAnonBuilding(origin);
+        building.gameObject.name = "ParkingLot";
+        building.AddComponent<CarDestination>();
+        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+    }
+
     void PlaceShop(Vector2Int origin, DestinationType destType) {
         var building = PlaceAnonBuilding(origin);
-        var shop = building.AddAndGetComponent<Destination>();
+        var shop = building.AddAndGetComponent<PedestrianDestination>();
         building.gameObject.name = $"{destType.ToString()} Shop";
         shop.destType = destType;
         building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(destType);
@@ -408,7 +430,7 @@ public class Placer : MonoBehaviour
         peds.ForEach(child => {
             child.transform.parent.GetComponent<Generator>().pedCapacity[destType]--;
             child.transform.parent = building.transform;
-            child.homeNode = building.GetComponent<Building>().parentLot.entranceNode;
+            child.homeNode = building.GetComponent<Building>().parentLot.pedestrianEntranceNode;
             child.CalculateItinerary();
         });
 
@@ -455,7 +477,7 @@ public class Placer : MonoBehaviour
         var missingNeighbors = DirectionUtils.allDirections
             .Where(dir => {
                 var coord = origin + Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[dir]);
-                return !datastore.city.ContainsKey(coord) || datastore.city[coord].nodeTile == null;
+                return !datastore.city.ContainsKey(coord) || (datastore.city[coord].nodeTile == null && datastore.city[coord].occupier.GetComponent<CarDestination>() == null);
             })
             .ToList();
         var roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingNeighbors);

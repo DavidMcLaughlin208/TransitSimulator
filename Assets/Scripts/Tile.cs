@@ -325,7 +325,16 @@ public class Tile : MonoBehaviour
         return null;
     }
 
-    public Node ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode)
+    public void ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode)
+    {
+        RoadNode nodeForConnection = GetRoadNodeForConnection(direction, location, externalNode);
+        if (nodeForConnection != null)
+        {
+            externalNode.connections.Add(nodeForConnection);
+        }
+    }
+
+    public RoadNode GetRoadNodeForConnection(Direction direction, RoadNodeLocation location, Node externalNode) 
     {
         Dictionary<RoadNodeLocation, RoadNodeLocation> locationMappingForDirection = DirectionUtils.RoadUtils.externalConnectionMapping[direction];
         if (locationMappingForDirection.ContainsKey(location))
@@ -336,7 +345,7 @@ public class Tile : MonoBehaviour
             {
                 return null;
             }
-            externalNode.connections.Add(roadNodeToConnectTo);
+            return roadNodeToConnectTo;
         }
 
         return null;

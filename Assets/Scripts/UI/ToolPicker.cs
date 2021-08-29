@@ -21,6 +21,8 @@ public class ToolPicker : MonoBehaviour {
         MapButtonToToolType(hotelPlacerButton, ToolType.HOTEL_PLACER);
         var apartmentPlacerButton = datastore.canvasParent.transform.Find("ApartmentPlacer").GetComponent<Button>();
         MapButtonToToolType(apartmentPlacerButton, ToolType.APARTMENT_PLACER);
+        var parkingLotPlacerButton = datastore.canvasParent.transform.Find("ParkingLotPlacer").GetComponent<Button>();
+        MapButtonToToolType(parkingLotPlacerButton, ToolType.PARKINGLOT_PLACER);
 
 
         var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
@@ -68,4 +70,5 @@ public enum ToolType {
     SHOP_PLACER,
     HOTEL_PLACER,
     APARTMENT_PLACER,
+    PARKINGLOT_PLACER
 }
