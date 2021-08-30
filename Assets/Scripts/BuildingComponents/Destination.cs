@@ -36,7 +36,7 @@ public class Destination : MonoBehaviour {
 
     public void Update () {
         if (!servicePending && pedQueue.Count > 0) {
-            StartCoroutine(QueueForSeconds(pedQueue.Dequeue(), datastore.baseQueueTime));
+            StartCoroutine(QueueForFrames(pedQueue.Dequeue(), datastore.baseQueueTime));
         }
     }
 
@@ -44,9 +44,10 @@ public class Destination : MonoBehaviour {
         pedQueue.Enqueue(pedestrian);
     }
 
-    IEnumerator QueueForSeconds(Pedestrian pedestrian, int seconds) {
+    IEnumerator QueueForFrames(Pedestrian pedestrian, int seconds) {
         servicePending = true;
-        yield return new WaitForSeconds(seconds);
+        var initStamp = datastore.tickCounter.Value;
+        yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
         pedestrian.headingHome = true;
         pedestrian.transform.position = lot.exitNode.transform.position;
         pedestrian.currentNode = lot.exitNode;

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UniRx;
 using System.Collections.Generic;
+using System;
 
 public class Datastore : MonoBehaviour {
 
@@ -29,10 +30,14 @@ public class Datastore : MonoBehaviour {
     //  \__, |\__,_|_| |_| |_|\___| |_|\___/ \___/| .__/
     //   __/ |                                    | |
     //  |___/                                     |_|
+    IDisposable tickUpdater; // responsible for updating tickCounter for "frame rate"
     public IntReactiveProperty tickCounter = new IntReactiveProperty(0);
+    public FloatReactiveProperty tickModifier = new FloatReactiveProperty(1f);
+    public float frameSpan = 0.016666667f; // 60 FPS
+    public float deltaTime = 1f;
     public FloatReactiveProperty spawnChance = new FloatReactiveProperty(0.1f);
     public int baseCapacity = 10; // base capacity for hotels
-    public int baseQueueTime = 3; // base time for shops serving peds
+    public int baseQueueTime = 180; // base # of frames for shops to take to serve peds. at 1x this is 3 seconds
     public MessageBroker gameEvents = new MessageBroker();
 
     //  _                   _
@@ -55,4 +60,17 @@ public class Datastore : MonoBehaviour {
     //  \__,_|_|
     public GameObject canvasParent;
 
+
+
+    public void Start() {
+        tickModifier.Subscribe(modifier => deltaTime = tickModifier.Value == 0 ? 0 : frameSpan * tickModifier.Value);
+        tickUpdater = Observable.Interval(TimeSpan.FromMilliseconds(frameSpan)).Subscribe(_ => tickCounter.Value++);
+
+        tickModifier.Subscribe(modifier => {
+            tickUpdater.Dispose();
+            if (modifier != 0) {
+                tickUpdater = Observable.Interval(TimeSpan.FromMilliseconds(frameSpan * modifier)).Subscribe(_ => tickCounter.Value++);
+            }
+        });
+    }
 }

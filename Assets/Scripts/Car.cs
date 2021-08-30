@@ -2,9 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UniRx;
 
 public class Car : MonoBehaviour
 {
+    Datastore datastore;
+
     public static float brakingDistance = 0.7f;
     public static float targetStoppingDistance = 0.35f;
     public static int intersectionNodeLookaheadCount = 2;
@@ -51,6 +54,8 @@ public class Car : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        datastore = GameObject.Find("God").GetComponent<Datastore>();
+
         //GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
         carBodySprite.color = ColorUtils.GetColorForDestType(desiredDestType);
         originGO = transform.Find("OriginPoint").gameObject;
@@ -59,18 +64,19 @@ public class Car : MonoBehaviour
         CalculateItinerary();
         currentCurve = new Curve();
         SetNewCurve();
-        
+
+        datastore.tickCounter.Subscribe(_ => UpdateOnTick());
     }
 
     // Update is called once per frame
-    void Update()
+    void UpdateOnTick()
     {
         if (itinerary.Count > 0)
         {
             speed = CalculateSpeed(speed);
-            
+
             transform.position = currentCurve.GetCurrentPosition();
-            float lerpIncrease = 1 / (currentCurve.distance / speed) * Time.deltaTime;
+            float lerpIncrease = 1 / (currentCurve.distance / speed) * datastore.deltaTime;
             currentCurve.currentPlace = Mathf.Min(currentCurve.currentPlace + lerpIncrease, 1f);
             if (currentNode.IsIntersectionNode() && currentlyLockedTiles.Count > 0)
             {
@@ -103,7 +109,7 @@ public class Car : MonoBehaviour
                 direction.Normalize();
                 float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
                 Quaternion rotation = Quaternion.AngleAxis(angle + offset, Vector3.forward);
-                transform.rotation = Quaternion.Lerp(transform.rotation, rotation, Time.deltaTime * turnStrength);
+                transform.rotation = Quaternion.Lerp(transform.rotation, rotation, datastore.deltaTime * turnStrength);
             }
 
             if (Vector2.Distance(transform.position, targetNode.transform.position) < 0.02)
@@ -116,7 +122,7 @@ public class Car : MonoBehaviour
                     CalculateItinerary();
                     SetNewCurve();
                 }
-                targetNode = itinerary[1];                
+                targetNode = itinerary[1];
             }
         }
         previousPos = transform.position;
@@ -131,7 +137,7 @@ public class Car : MonoBehaviour
         currentCurve.originPoint = itinerary[0].transform.position;
         currentCurve.targetPoint = itinerary[1].transform.position;
         currentCurve.currentPlace = 0;
-        
+
         float tempDistance = Vector2.Distance(currentCurve.originPoint, currentCurve.targetPoint);
         Vector2 direction = DirectionUtils.RoadUtils.nodeLocationVectors[((RoadNode)itinerary[0]).location];
         Vector2 intermediate = currentCurve.originPoint + direction * (tempDistance / 2);// Mathf.Sqrt(2));
@@ -184,12 +190,12 @@ public class Car : MonoBehaviour
             if (distance < minDistanceForBraking && distance < brakingDistance)
             {
                 minDistanceForBraking = distance;
-                float scaledBrakingForce = (brakingDistance - distance) * brakingForce * Time.deltaTime;
+                float scaledBrakingForce = (brakingDistance - distance) * brakingForce * datastore.deltaTime;
                 nearbyCarCalcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
                 if (distance > targetStoppingDistance)
                 {
                     nearbyCarCalcSpeed = Mathf.Max(nearbyCarCalcSpeed, minSpeed);
-                } 
+                }
                 decelerated = true;
             }
         }
@@ -199,7 +205,7 @@ public class Car : MonoBehaviour
         float approachingIntersectionCalcSpeed = 100f;
         for (int i = 0; i < intersectionsQueued.Count; i++)
         {
-            
+
             RoadNode intersectionNode = intersectionsQueued[0].Item1;
             bool clearedForIntersection = intersectionsQueued[0].Item2;
             if (!clearedForIntersection)
@@ -207,7 +213,7 @@ public class Car : MonoBehaviour
                 float distance = Vector2.Distance(transform.position, intersectionNode.transform.position);
                 if (distance < brakingDistance)
                 {
-                    float scaledBrakingForce = (brakingDistance - distance) * brakingForce * Time.deltaTime;
+                    float scaledBrakingForce = (brakingDistance - distance) * brakingForce * datastore.deltaTime;
                     approachingIntersectionCalcSpeed = Mathf.Max(calcSpeed - scaledBrakingForce, 0);
                     decelerated = true;
                     Vector3 targetStoppingLocation = DirectionUtils.RoadUtils.nodeLocationVectors[intersectionNode.location] * -1 * 0.15f + (Vector2) intersectionNode.transform.position;
@@ -227,9 +233,9 @@ public class Car : MonoBehaviour
 
         if (!decelerated)
         {
-            calcSpeed = Mathf.Min(currentSpeed + acceleration * Time.deltaTime, maxSpeed);
+            calcSpeed = Mathf.Min(currentSpeed + acceleration * datastore.deltaTime, maxSpeed);
         }
-        
+
         return calcSpeed;
     }
 
