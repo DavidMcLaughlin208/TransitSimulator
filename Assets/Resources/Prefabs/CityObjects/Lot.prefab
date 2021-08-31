@@ -104,6 +104,9 @@ MonoBehaviour:
   pedestrianEntranceNode: {fileID: 1113390938247561728}
   carExitNode: {fileID: 91180280258559279}
   carEntranceNode: {fileID: 8558241855235868131}
+  connectedTile: {fileID: 0}
+  pedestrianConnectionsEnabled: 1
+  carConnectionsEnabled: 0
 --- !u!1 &4038574557085308461
 GameObject:
   m_ObjectHideFlags: 0

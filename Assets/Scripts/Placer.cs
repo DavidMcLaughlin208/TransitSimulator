@@ -68,8 +68,10 @@ public class Placer : MonoBehaviour
                 preview.lotOrigins
                     .Also(coord => PlaceLot(coord));
                 preview.roadCoords
-                    .Also(i => PlaceRoad(i)) // place roads for the whole block
-                    .SelectMany(i => {
+                    .Also(i => PlaceRoad(i)); // place roads for the whole block
+                preview.lotOrigins
+                    .Also(coord => FindAndAssignConnectedTileForLot(coord));
+                preview.roadCoords.SelectMany(i => {
                         return datastore.city.GetImmediateNeighbors(i) // get any neighbors from an adjacent block to be refreshed
                             .Where(i => datastore.city[i].nodeTile != null && !preview.roadCoords.Contains(i))
                             .Concat(new List<Vector2Int> { i })
@@ -84,13 +86,10 @@ public class Placer : MonoBehaviour
                             .Where(i => datastore.city[i].nodeTile == null)
                             .Also(lotOrigin => {
                                 var lot = datastore.city[lotOrigin].occupier.GetComponent<Lot>();
-                                if (lot.pedestrianEntranceNode.connections.Count != 0) {
-                                    var roadTile = lot.pedestrianEntranceNode.connections.First().owningTile;
+                                if (lot != null && lot.connectedTile != null) {
+                                    var roadTile = lot.connectedTile;
                                     var coordsForConnectedTile =
-                                        datastore.city
-                                            .ToList()
-                                            .Where(kvp => kvp.Value.nodeTile == roadTile)
-                                            .First().Key;
+                                        roadTile.coordinateLocation;
                                     // only refresh street connection for all roadCoords, since they have just gotten refreshed
                                     if (coordsForConnectedTile == roadCoord) {
                                         lot.ResetConnections();
@@ -205,11 +204,25 @@ public class Placer : MonoBehaviour
             .Subscribe(e => {
                 var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
                 var lotComponents = lot.GetBuildingComponents();
+                Vector2Int coords = e.cell.ToVec2();
+                var connectedTile = lot.connectedTile;
                 if (lotComponents.Values.All(i => i == null))
                 { // if this lot is empty
                     PlaceParkingLot(e.cell.ToVec2());
+
+                    lot.carConnectionsEnabled = true;
+                    lot.pedestrianConnectionsEnabled = false;
+                    lot.ResetConnections();
+
+                    connectedTile.ResetTile();
+                    ReorientRoad(connectedTile.coordinateLocation);
+                    connectedTile.DisableUnusedRoadNodes();
+                    connectedTile.EstablishNodeConnections();
+
+                    ConnectLotToStreet(coords, connectedTile);
+
+                    datastore.gameEvents.Publish(new CityChangedEvent());
                 }
-                datastore.gameEvents.Publish(new CityChangedEvent());
             });
     }
 
@@ -335,6 +348,35 @@ public class Placer : MonoBehaviour
         }
     }
 
+    void FindAndAssignConnectedTileForLot(Vector2Int origin, Tile? previouslyConnected = null)
+    {
+        var lot = datastore.city[origin].occupier.GetComponent<Lot>();
+
+        if (previouslyConnected != null)
+        {
+            return;
+        }
+
+        var neighboringStreets = DirectionUtils.allDirections
+            .ToDictionary(
+                dir => dir,
+                dir =>
+                    datastore.city.GetAllBorderingNeighborsInDirection(dir, origin)
+                        .Where(cityTile => cityTile.nodeTile != null) // filter down to just road tiles, TODO fix this
+                        .ToList())
+            .Where(kvp => kvp.Value.Count() > 0) // filter to directions that have road tiles
+            .ToDictionary(i => i.Key, i => i.Value);
+
+        var randomDirection = neighboringStreets.Keys.getRandomElement();
+
+        lot.rotation = DirectionUtils.generalRotationMapping[randomDirection];
+
+        var randomNeighboringStreet = neighboringStreets[randomDirection].getRandomElement();
+        Tile neighboringTile = randomNeighboringStreet.nodeTile;
+
+        lot.connectedTile = neighboringTile;
+    }
+
     void ConnectLotToStreet(Vector2Int origin, Tile? previouslyConnected = null) {
         var lot = datastore.city[origin].occupier.GetComponent<Lot>();
 
@@ -367,6 +409,7 @@ public class Placer : MonoBehaviour
         ] * -1 + origin); // reverses delta vector and normalizes to lot origin
 
         lot.ConnectToStreet(neighboringTile);
+        lot.connectedTile = neighboringTile;
     }
 
     GameObject PlaceAnonBuilding(Vector2Int origin) {
@@ -447,6 +490,7 @@ public class Placer : MonoBehaviour
                 datastore.validTiles.GetCellCenterWorld(new Vector3Int(origin.x, origin.y, 0)),
                 Quaternion.identity
             );
+            road.GetComponent<Tile>().coordinateLocation = new Vector2Int(origin.x, origin.y);
             datastore.city[origin] = new CityTile() {
                 occupier = road,
                 nodeTile = road.GetComponent<Tile>()
@@ -477,7 +521,8 @@ public class Placer : MonoBehaviour
         var missingNeighbors = DirectionUtils.allDirections
             .Where(dir => {
                 var coord = origin + Vector2Int.RoundToInt(DirectionUtils.directionToCoordinatesMapping[dir]);
-                return !datastore.city.ContainsKey(coord) || (datastore.city[coord].nodeTile == null && datastore.city[coord].occupier.GetComponent<CarDestination>() == null);
+                bool isCoordConnectedLot = datastore.city.ContainsKey(coord) && datastore.city[coord].occupier != null && datastore.city[coord].occupier.GetComponent<Lot>() != null && datastore.city[coord].occupier.GetComponent<Lot>().connectedTile != null && datastore.city[coord].occupier.GetComponent<Lot>().connectedTile.coordinateLocation == origin && datastore.city[coord].occupier.GetComponent<Lot>().carConnectionsEnabled;
+        return !datastore.city.ContainsKey(coord) || (datastore.city[coord].nodeTile == null && !isCoordConnectedLot);
             })
             .ToList();
         var roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingNeighbors);

@@ -6,7 +6,7 @@ public class PedestrianDestination : Destination
     // Use this for initialization
     void Start()
     {
-
+        lot.carConnectionsEnabled = false;
     }
 
     public void Update () {

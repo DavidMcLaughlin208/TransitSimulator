@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class Tile : MonoBehaviour
+public class Tile : MonoBehaviour, INodeConnector
 {
     Datastore datastore;
 
@@ -30,8 +30,8 @@ public class Tile : MonoBehaviour
     //public List<Car> carsWithIntersectionLock = new List<Car>();
     public Dictionary<IntersectionTile, bool> intersectionInnerTileLocks = new Dictionary<IntersectionTile, bool>();
 
-    public int x;
-    public int y;
+    public Vector2Int coordinateLocation;
+  
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
@@ -168,6 +168,20 @@ public class Tile : MonoBehaviour
         }
     }
 
+    CityTile GetCityTileFromDatastore(Vector2 coord)
+    {
+        var tileCoord3 = datastore.validTiles.WorldToCell(coord);
+        var tileCoord2 = new Vector2Int(tileCoord3.x, tileCoord3.y);
+        if (datastore.city.ContainsKey(tileCoord2))
+        {
+            return datastore.city[tileCoord2];
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public void EstablishNodeConnections()
     {
         ConnectPedestrianNodesInterally();
@@ -203,13 +217,29 @@ public class Tile : MonoBehaviour
             for (int j = 0; j < nodeDesiredDirections.Count; j++)
             {
                 Direction dir = nodeDesiredDirections[j];
-                Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
-                if (neighboringTile != null)
+                CityTile neighboringTile = GetCityTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                if (neighboringTile == null)
+                {
+                    continue;
+                }
+                INodeConnector nodeConnector = null;
+                if (neighboringTile.occupier.GetComponent<Lot>() != null)
+                {
+                    nodeConnector = neighboringTile.occupier.GetComponent<Lot>();
+                }
+                if (neighboringTile.nodeTile != null)
+                {
+                    nodeConnector = neighboringTile.nodeTile;
+                }
+
+                if (nodeConnector != null)
                 {
                     var connectingNode =
-                        neighboringTile.ReceivePedestrianNodeConnectionAttempt(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
-                    pedNodeMap[location].GetComponent<PedestrianNode>().connections.Add(connectingNode);
-
+                        nodeConnector.GetPedestrianNodeForConnection(dir, location, pedNodeMap[location].GetComponent<PedestrianNode>());
+                    if (connectingNode != null)
+                    {
+                        pedNodeMap[location].GetComponent<PedestrianNode>().connections.Add(connectingNode);
+                    }
                 }
             }
         }
@@ -253,10 +283,24 @@ public class Tile : MonoBehaviour
                 for (int j = 0; j < nodeDesiredDirections.Count; j++)
                 {
                     Direction dir = nodeDesiredDirections[j];
-                    Tile neighboringTile = GetTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
-                    if (neighboringTile != null)
+                    CityTile neighboringTile = GetCityTileFromDatastore((Vector2)transform.position + DirectionUtils.directionToCoordinatesMapping[dir]);
+                    if (neighboringTile == null)
                     {
-                        neighboringTile.ReceiveRoadNodeConnectionAttempt(dir, location, currentRoadNode);
+                        continue;
+                    }
+                    INodeConnector nodeConnector = null;
+                    if (neighboringTile.occupier.GetComponent<Lot>() != null)
+                    {
+                        nodeConnector = neighboringTile.occupier.GetComponent<Lot>();
+                    }
+                    if (neighboringTile.nodeTile != null)
+                    {
+                        nodeConnector = neighboringTile.nodeTile;
+                    }
+
+                    if (nodeConnector != null)
+                    {
+                        nodeConnector.ReceiveRoadNodeConnectionAttempt(dir, location, currentRoadNode);
                     }
                 }
             }
@@ -309,7 +353,7 @@ public class Tile : MonoBehaviour
 
     // Direction is relative to the tile the call is coming from. So if a tile is connecting to another tile
     // to its right the direction would be East
-    public Node ReceivePedestrianNodeConnectionAttempt(Direction direction, PedestrianNodeLocation location, Node externalNode)
+    Node INodeConnector.GetPedestrianNodeForConnection(Direction direction, PedestrianNodeLocation location, Node externalNode)
     {
         Dictionary<PedestrianNodeLocation, PedestrianNodeLocation> locationMappingForDirection = DirectionUtils.PedestrianUtils.externalConnectionMapping[direction];
         if (locationMappingForDirection.ContainsKey(location)) {
@@ -325,16 +369,16 @@ public class Tile : MonoBehaviour
         return null;
     }
 
-    public void ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode)
+    void INodeConnector.ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode)
     {
-        RoadNode nodeForConnection = GetRoadNodeForConnection(direction, location, externalNode);
+        RoadNode nodeForConnection = ((INodeConnector) this).GetRoadNodeForConnection(direction, location, externalNode);
         if (nodeForConnection != null)
         {
             externalNode.connections.Add(nodeForConnection);
         }
     }
 
-    public RoadNode GetRoadNodeForConnection(Direction direction, RoadNodeLocation location, Node externalNode) 
+    RoadNode INodeConnector.GetRoadNodeForConnection(Direction direction, RoadNodeLocation location, Node externalNode) 
     {
         Dictionary<RoadNodeLocation, RoadNodeLocation> locationMappingForDirection = DirectionUtils.RoadUtils.externalConnectionMapping[direction];
         if (locationMappingForDirection.ContainsKey(location))

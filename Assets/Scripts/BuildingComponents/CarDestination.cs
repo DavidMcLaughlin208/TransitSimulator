@@ -8,7 +8,8 @@ public class CarDestination : Destination
     // Use this for initialization
     void Start()
     {
-        
+        lot.pedestrianConnectionsEnabled = false;
+        lot.carConnectionsEnabled = true;
     }
 
     // Update is called once per frame
