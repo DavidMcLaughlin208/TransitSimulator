@@ -85,20 +85,13 @@ public class Lot : MonoBehaviour, INodeConnector {
             {
                 Node otherNode = nodeConnector.GetPedestrianNodeForConnection(dir, pedestrianEntranceNode.location, pedestrianEntranceNode);
                 pedestrianEntranceNode.connections.Add(otherNode);
-                //otherNode.connections.Add(pedestrianEntranceNode);
                 otherNode = nodeConnector.GetPedestrianNodeForConnection(dir, pedestrianExitNode.location, pedestrianExitNode);
                 pedestrianExitNode.connections.Add(otherNode);
-                //otherNode.connections.Add(pedestrianExitNode);
             }
 
             if (carConnectionsEnabled)
             {
                 nodeConnector.ReceiveRoadNodeConnectionAttempt(dir, carExitNode.location, carExitNode);
-                //RoadNode externalNode = nodeConnector.GetRoadNodeForConnection(dir, carEntranceNode.location, carEntranceNode);
-                //if (externalNode != null)
-                //{
-                //    externalNode.connections.Add(carEntranceNode);
-                //}
             }
         }
     }
@@ -114,10 +107,7 @@ public class Lot : MonoBehaviour, INodeConnector {
             PedestrianNodeLocation nodeToConnectToLocation = locationMappingForDirection[location];
             if (pedNodeMap.ContainsKey(nodeToConnectToLocation))
             {
-                Node nodeToConnect = pedNodeMap[nodeToConnectToLocation];
-                // nodeToConnect.connections.Add(externalNode);
-                // nodeToConnect.RecalculateLinePos();
-                return nodeToConnect;
+                return pedNodeMap[nodeToConnectToLocation];
             }
         }
         return null;
@@ -125,6 +115,10 @@ public class Lot : MonoBehaviour, INodeConnector {
 
     void INodeConnector.ReceiveRoadNodeConnectionAttempt(Direction direction, RoadNodeLocation location, Node externalNode)
     {
+        if (!carConnectionsEnabled || externalNode.owningTile != this.connectedTile)
+        {
+            return;
+        }
         RoadNode nodeForConnection = ((INodeConnector)this).GetRoadNodeForConnection(direction, location, externalNode);
         if (nodeForConnection != null)
         {

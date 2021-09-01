@@ -101,7 +101,7 @@ public class Placer : MonoBehaviour
                             });
                     })
                     .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines())
-                    .Also(i => PlaceRandomDestination(i, DestinationType.COFFEE))
+                    //.Also(i => PlaceRandomDestination(i, DestinationType.COFFEE))
                     .Also(i => PlaceRandomCar(i, DestinationType.COFFEE));
                 nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
                 preview.Cleanup();
@@ -434,8 +434,9 @@ public class Placer : MonoBehaviour
     {
         var building = PlaceAnonBuilding(origin);
         building.gameObject.name = "ParkingLot";
-        building.AddComponent<CarDestination>();
+        CarDestination carDestination = building.AddAndGetComponent<CarDestination>();
         building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+        carDestination.destType = DestinationType.COFFEE;
     }
 
     void PlaceShop(Vector2Int origin, DestinationType destType) {
