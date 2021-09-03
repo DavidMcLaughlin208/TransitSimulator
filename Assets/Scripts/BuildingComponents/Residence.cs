@@ -16,15 +16,15 @@ public class Residence : MonoBehaviour {
         building = this.GetComponent<Building>();
         lot = building.parentLot;
 
-        lot.entranceNode.owningBuilding = building;
-        lot.exitNode.owningBuilding = building;
+        lot.pedestrianEntranceNode.owningBuilding = building;
+        lot.pedestrianExitNode.owningBuilding = building;
     }
 
     public void ReceivePedestrian(Pedestrian pedestrian)
     {
         pedestrian.headingHome = false;
-        pedestrian.transform.position = lot.exitNode.transform.position;
-        pedestrian.currentNode = lot.exitNode;
+        pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
+        pedestrian.currentNode = lot.pedestrianExitNode;
         pedestrian.CalculateItinerary();
     }
 }

@@ -17,7 +17,7 @@ public class RoadNode : Node
         {
             return false;
         }
-        else if (owningTile.IsIntersection())
+        else if (owningTile != null && owningTile.IsIntersection())
         {
             return true;
         }

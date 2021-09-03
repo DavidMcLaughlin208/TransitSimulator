@@ -7,7 +7,7 @@ public class Building : MonoBehaviour
     public Lot parentLot;
 
     public void ReceivePedestrian(Pedestrian pedestrian) {
-        var destinationComp = this.GetComponent<Destination>();
+        var destinationComp = this.GetComponent<PedestrianDestination>();
         var generatorComp = this.GetComponent<Generator>();
         var residenceComp = this.GetComponent<Residence>();
 
