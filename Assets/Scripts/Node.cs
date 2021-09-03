@@ -31,7 +31,7 @@ public class Node : MonoBehaviour
         {
             linePositions[i * 2] = transform.position;
             Node other = connections[i];
-            linePositions[i * 2 + 1] = other.transform.position;
+             linePositions[i * 2 + 1] = other.transform.position;
         }
         line.SetPositions(linePositions);
     }

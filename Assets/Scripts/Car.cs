@@ -51,6 +51,11 @@ public class Car : MonoBehaviour
         }
     }
 
+    public void Awake()
+    {
+        datastore = GameObject.Find("God").GetComponent<Datastore>();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -66,6 +71,16 @@ public class Car : MonoBehaviour
         SetNewCurve();
 
         datastore.tickCounter.Subscribe(_ => UpdateOnTick());
+
+        datastore.gameEvents
+            .Receive<CityChangedEvent>()
+            .Subscribe(_ => {
+                CalculateItinerary();
+                if (currentCurve.currentPlace == 0)
+                {
+                    SetNewCurve();
+                }
+            });
     }
 
     // Update is called once per frame
@@ -282,6 +297,8 @@ public class Car : MonoBehaviour
         HashSet<Node> seenNodes = new HashSet<Node>();
         Dictionary<Node, Node> cameFrom = new Dictionary<Node, Node>();
 
+        Node nodeToStartFrom = targetNode != null ? targetNode : currentNode;
+
         for (int i = 0; i < currentNode.connections.Count; i++)
         {
             Node neighbor = currentNode.connections[i];
@@ -322,6 +339,10 @@ public class Car : MonoBehaviour
                 if ((!headingHome && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode))
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
+                    if (targetNode != null)
+                    {
+                        this.itinerary.Insert(0, currentNode);
+                    }
                     targetNode = itinerary[1];
                     return;
                 }

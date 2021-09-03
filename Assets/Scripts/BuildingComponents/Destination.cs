@@ -14,13 +14,17 @@ public class Destination : MonoBehaviour {
     public DestinationType destType {
         get { return type; }
         set {
-            this.lot.entranceNode.destType = value;
+            this.lot.carEntranceNode.destType = value;
+            this.lot.pedestrianEntranceNode.destType = value;
             type = value;
         }
     }
 
     public Queue<Pedestrian> pedQueue = new Queue<Pedestrian>();
-    public bool servicePending = false;
+    public bool pedServicePending = false;
+
+    public Queue<Car> carQueue = new Queue<Car>();
+    public bool carServicePending = false;
 
     public void Awake () {
         var god = GameObject.Find("God");
@@ -30,12 +34,12 @@ public class Destination : MonoBehaviour {
         building = this.GetComponent<Building>();
         lot = building.parentLot;
 
-        lot.entranceNode.owningBuilding = building;
-        lot.exitNode.owningBuilding = building;
+        lot.pedestrianEntranceNode.owningBuilding = building;
+        lot.pedestrianExitNode.owningBuilding = building;
     }
 
     public void Update () {
-        if (!servicePending && pedQueue.Count > 0) {
+        if (!pedServicePending && pedQueue.Count > 0) {
             StartCoroutine(QueueForFrames(pedQueue.Dequeue(), datastore.baseQueueTime));
         }
     }
@@ -45,14 +49,14 @@ public class Destination : MonoBehaviour {
     }
 
     IEnumerator QueueForFrames(Pedestrian pedestrian, int seconds) {
-        servicePending = true;
+        pedServicePending = true;
         var initStamp = datastore.tickCounter.Value;
         yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
         pedestrian.headingHome = true;
-        pedestrian.transform.position = lot.exitNode.transform.position;
-        pedestrian.currentNode = lot.exitNode;
+        pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
+        pedestrian.currentNode = lot.pedestrianExitNode;
         pedestrian.CalculateItinerary();
-        servicePending = false;
+        pedServicePending = false;
     }
 }
 
