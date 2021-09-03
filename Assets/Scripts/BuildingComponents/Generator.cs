@@ -33,12 +33,15 @@ public class Generator : MonoBehaviour {
     }
 
     public void Start () {
-        datastore.tickCounter.Subscribe(_ => {
-            var nextType = DestinationUtils.allDestTypes.getRandomElement();
-            if (random.Next(101) < (datastore.spawnChance.Value * 100)) {
-                SpawnPedestrian(nextType);
-            }
-        });
+        datastore.tickCounter
+            .Where(counterValue => counterValue % Mathf.RoundToInt(60 / datastore.tickModifier.Value) == 0) // do this every 60 ticks
+            .Subscribe(_ => {
+                Debug.Log("Trying to spawn ped");
+                var nextType = DestinationUtils.allDestTypes.getRandomElement();
+                if (random.Next(101) < (datastore.spawnChance.Value * 100)) {
+                    SpawnPedestrian(nextType);
+                }
+            });
     }
 
     public void SpawnPedestrian(DestinationType destType)

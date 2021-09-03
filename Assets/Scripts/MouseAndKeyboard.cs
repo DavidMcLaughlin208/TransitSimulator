@@ -1,5 +1,5 @@
-using System.Collections.ObjectModel;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UniRx;
 using System;
 using System.Linq;
@@ -12,7 +12,8 @@ public class MouseAndKeyboard : MonoBehaviour {
     IObservable<long> clickStream = Observable.EveryUpdate().Where(_ => Input.GetMouseButtonDown(0));
     IObservable<long> mouseUpStream = Observable.EveryUpdate().Where(_ => Input.GetMouseButtonUp(0));
     IObservable<long> mouseMoveStream = Observable.EveryUpdate();
-    public Vector3 mousePosition;
+    public bool mouseOverCanvasElement = false;
+    public Vector3 prevMousePosition;
     Vector3Int hoveredCoord;
     List<KeyCode> pressedKeys;
     List<KeyCode> watchedKeys = new List<KeyCode>() {
@@ -20,15 +21,17 @@ public class MouseAndKeyboard : MonoBehaviour {
     };
 
     public void Start() {
-        mousePosition = Input.mousePosition;
+        prevMousePosition = Input.mousePosition;
         datastore = this.GetComponent<Datastore>();
-        clickStream.Subscribe(_ => {
-            datastore.inputEvents.Publish(
-                new ClickEvent() {
-                    cell = GetMouseCellPosition(),
-                }
-            );
-        });
+        clickStream
+            .Where(_ => !mouseOverCanvasElement)
+            .Subscribe(_ => {
+                datastore.inputEvents.Publish(
+                    new ClickEvent() {
+                        cell = GetMouseCellPosition(),
+                    }
+                );
+            });
 
         mouseUpStream.Subscribe(_ =>
         {
@@ -39,28 +42,31 @@ public class MouseAndKeyboard : MonoBehaviour {
             );
         });
 
-        Observable.EveryUpdate().Where(_ => {
-            if (hoveredCoord != GetMouseCellPosition()) {
-                hoveredCoord = GetMouseCellPosition();
-                return true;
-            } else {
-                return false;
-            }
-        }).Subscribe(_ => {
-            datastore.inputEvents.Publish(
-                new HoverEvent() {
-                    cell = hoveredCoord,
+        Observable.EveryUpdate()
+            .Where(_ => !mouseOverCanvasElement)
+            .Where(_ => {
+                if (hoveredCoord != GetMouseCellPosition()) {
+                    hoveredCoord = GetMouseCellPosition();
+                    return true;
+                } else {
+                    return false;
                 }
-            );
-        });
+            }).Subscribe(_ => {
+                datastore.inputEvents.Publish(
+                    new HoverEvent() {
+                        cell = hoveredCoord,
+                    }
+                );
+            });
 
         Observable.EveryUpdate()
-            .Where(_ => mousePosition != Input.mousePosition)
+            .Where(_ => prevMousePosition != Input.mousePosition)
             .Subscribe(_ => {
-                this.mousePosition = Input.mousePosition;
+                mouseOverCanvasElement = GetMouseCanvasCollision().Count > 0;
+                this.prevMousePosition = Input.mousePosition;
                 datastore.inputEvents.Publish(new MouseMoveEvent());
             });
-            
+
 
         Observable.EveryUpdate()
             .Where(_ => {
@@ -86,5 +92,14 @@ public class MouseAndKeyboard : MonoBehaviour {
     Vector3Int GetMouseCellPosition() {
         var cellPoint = datastore.validTiles.WorldToCell(Camera.main.ScreenToWorldPoint(Input.mousePosition));
         return new Vector3Int(cellPoint.x, cellPoint.y, 0);
+    }
+
+    // I copied this from stackoverflow, I don't know what it does, but it works, don't @ me
+    List<RaycastResult> GetMouseCanvasCollision() {
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
+        eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        return results;
     }
 }
