@@ -17,7 +17,7 @@ public class MouseAndKeyboard : MonoBehaviour {
     Vector3Int hoveredCoord;
     List<KeyCode> pressedKeys;
     List<KeyCode> watchedKeys = new List<KeyCode>() {
-        KeyCode.R, KeyCode.E,
+        KeyCode.R, KeyCode.E, KeyCode.C, KeyCode.T, KeyCode.B,
     };
 
     public void Start() {

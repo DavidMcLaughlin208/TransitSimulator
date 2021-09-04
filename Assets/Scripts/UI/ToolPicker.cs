@@ -27,10 +27,13 @@ public class ToolPicker : MonoBehaviour {
 
         var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
         MapButtonToToolColor(coffeeColorButton, DestinationType.COFFEE);
+        MapKeyPressToToolColor(KeyCode.C, DestinationType.COFFEE);
         var teaColorButton = datastore.canvasParent.transform.Find("TeaColorButton").GetComponent<Button>();
         MapButtonToToolColor(teaColorButton, DestinationType.TEA);
+        MapKeyPressToToolColor(KeyCode.T, DestinationType.TEA);
         var beerColorButton = datastore.canvasParent.transform.Find("BeerColorButton").GetComponent<Button>();
         MapButtonToToolColor(beerColorButton, DestinationType.BEER);
+        MapKeyPressToToolColor(KeyCode.B, DestinationType.BEER);
 
         datastore.activeTool.Value = ToolType.HAND;
     }
@@ -61,6 +64,13 @@ public class ToolPicker : MonoBehaviour {
                 button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
             }
         });
+    }
+
+    public void MapKeyPressToToolColor(KeyCode keyCode, DestinationType destType) {
+        datastore.inputEvents
+            .Receive<KeyEvent>()
+            .Where(e => e.keyCode == keyCode)
+            .Subscribe(_ => datastore.activeToolColor.Value = destType);
     }
 }
 
