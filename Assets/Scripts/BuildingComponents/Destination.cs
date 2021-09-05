@@ -36,6 +36,9 @@ public class Destination : MonoBehaviour {
 
         lot.pedestrianEntranceNode.owningBuilding = building;
         lot.pedestrianExitNode.owningBuilding = building;
+
+        lot.carEntranceNode.owningBuilding = building;
+        lot.carExitNode.owningBuilding = building;
     }
 
     

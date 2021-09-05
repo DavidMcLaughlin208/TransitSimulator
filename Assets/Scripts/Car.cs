@@ -128,6 +128,12 @@ public class Car : MonoBehaviour
                 SetNewCurve();
                 if (itinerary.Count <= 1)
                 {
+                    if (targetNode.destType == this.desiredDestType)
+                    {
+                        targetNode.owningBuilding.GetComponent<CarDestination>().ReceiveCar(this);
+                        headingHome = !headingHome;
+                        return;
+                    }
                     headingHome = !headingHome;
                     CalculateItinerary();
                     SetNewCurve();
@@ -159,6 +165,7 @@ public class Car : MonoBehaviour
 
     public void SetNewCurrentNode(RoadNode newNode)
     {
+        // Leave carQueue and intersection queues related to node we are leaving
         if (currentNode != null)
         {
             ((RoadNode)currentNode).RemoveCar(this);
@@ -168,11 +175,17 @@ public class Car : MonoBehaviour
                 currentlyLockedTiles.Clear();
                 intersectionsQueued.RemoveAt(0);
             }
-            itinerary.RemoveAt(0);
+            if (itinerary.Count > 0)
+            {
+                itinerary.RemoveAt(0);
+            }
         }
+
+        // Update current node
         currentNode = newNode;
         ((RoadNode)currentNode).AddCar(this);
 
+        // Lookahead for intersections and place self in queue
         if (itinerary.Count >= intersectionNodeLookaheadCount && itinerary[intersectionNodeLookaheadCount - 1].IsIntersectionNode())
         {
             itinerary[intersectionNodeLookaheadCount - 1].PlaceCarInIntersectionQueue(this);
@@ -337,8 +350,22 @@ public class Car : MonoBehaviour
                     if (targetNode != null)
                     {
                         this.itinerary.Insert(0, currentNode);
+                    } else
+                    {
+                        for (int p = 1; p < intersectionNodeLookaheadCount; p++)
+                        {
+                            if (itinerary.Count >= p)
+                            {
+                                if (itinerary[p].IsIntersectionNode())
+                                {
+                                    itinerary[p].PlaceCarInIntersectionQueue(this);
+                                    this.intersectionsQueued.Add((itinerary[p], false));
+                                }
+                            }
+                        }
                     }
                     targetNode = itinerary[1];
+                    SetNewCurve();
                     return;
                 }
             }

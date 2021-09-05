@@ -21,13 +21,23 @@ public class CarDestination : Destination
         }
     }
 
-    IEnumerator QueueForSeconds(Car car, int seconds)
+    public void ReceiveCar(Car car)
     {
+        carQueue.Enqueue(car);
+        car.transform.position = lot.carExitNode.transform.position;
+        car.carBodySprite.enabled = false;
+        car.itinerary.Clear();
+        car.SetNewCurrentNode(lot.carExitNode);
+        car.targetNode = null;
+        car.currentCurve.currentPlace = 0;
+    }
+
+    IEnumerator QueueForSeconds(Car car, int seconds)
+    {        
         carServicePending = true;
         yield return new WaitForSeconds(seconds);
         car.headingHome = true;
-        car.transform.position = lot.carExitNode.transform.position;
-        //car.currentNode = lot.pedestrianExitNode;
+        car.carBodySprite.enabled = true;
         car.CalculateItinerary();
         carServicePending = false;
     }
