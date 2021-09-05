@@ -58,7 +58,7 @@ public class CarDestination : Destination
     {
         if (!carServicePending && carQueue.Count > 0)
         {
-            StartCoroutine(QueueForSeconds(carQueue.Dequeue(), datastore.baseQueueTime));
+            StartCoroutine(QueueForFrames(carQueue.Dequeue(), datastore.baseQueueTime));
         }
     }
 
@@ -66,17 +66,18 @@ public class CarDestination : Destination
     {
         carQueue.Enqueue(car);
         car.transform.position = lot.carExitNode.transform.position;
-        car.carBodySprite.enabled = false;
+        //car.carBodySprite.enabled = false;
         car.itinerary.Clear();
         car.SetNewCurrentNode(lot.carExitNode);
         car.targetNode = null;
         car.currentCurve.currentPlace = 0;
     }
 
-    IEnumerator QueueForSeconds(Car car, int seconds)
+    IEnumerator QueueForFrames(Car car, int seconds)
     {        
         carServicePending = true;
-        yield return new WaitForSeconds(seconds);
+        var initStamp = datastore.tickCounter.Value;
+        yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
         car.headingHome = !car.headingHome;
         car.carBodySprite.enabled = true;
         car.CalculateItinerary();

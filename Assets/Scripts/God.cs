@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UniRx;
-using System;
 
 public class God : MonoBehaviour
 {
@@ -16,6 +14,7 @@ public class God : MonoBehaviour
         this.gameObject.AddComponent<MouseAndKeyboard>();
         this.gameObject.AddComponent<Placer>();
         this.gameObject.AddComponent<ToolPicker>();
+        this.gameObject.AddComponent<GameUI>();
     }
 
     void Start() {
@@ -24,7 +23,5 @@ public class God : MonoBehaviour
         activeLevel.transform.SetParent(baseTilemap.transform);
 
         datastore.validTiles = activeLevel.GetComponent<Tilemap>();
-
-        Observable.Interval(TimeSpan.FromMilliseconds(1000)).Subscribe(_ => datastore.tickCounter.Value++);
     }
 }

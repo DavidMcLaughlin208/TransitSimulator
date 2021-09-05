@@ -11,19 +11,24 @@ public class PedestrianDestination : Destination
         lot.carConnectionsEnabled = false;
     }
 
-    public void Update () {
-        if (!pedServicePending && pedQueue.Count > 0) {
-            StartCoroutine(QueueForSeconds(pedQueue.Dequeue(), datastore.baseQueueTime));
+    public void Update()
+    {
+        if (!pedServicePending && pedQueue.Count > 0)
+        {
+            StartCoroutine(QueueForFrames(pedQueue.Dequeue(), datastore.baseQueueTime));
         }
     }
 
-    public void ReceivePedestrian(Pedestrian pedestrian) {
+    public void ReceivePedestrian(Pedestrian pedestrian)
+    {
         pedQueue.Enqueue(pedestrian);
     }
 
-    IEnumerator QueueForSeconds(Pedestrian pedestrian, int seconds) {
+    IEnumerator QueueForFrames(Pedestrian pedestrian, int seconds)
+    {
         pedServicePending = true;
-        yield return new WaitForSeconds(seconds);
+        var initStamp = datastore.tickCounter.Value;
+        yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
         pedestrian.headingHome = true;
         pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
         pedestrian.currentNode = lot.pedestrianExitNode;

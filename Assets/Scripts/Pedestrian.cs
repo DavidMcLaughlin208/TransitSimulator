@@ -26,15 +26,17 @@ public class Pedestrian : MonoBehaviour
         datastore.gameEvents
             .Receive<CityChangedEvent>()
             .Subscribe(_ => CalculateItinerary());
+
+        datastore.tickCounter.Subscribe(_ => UpdateOnTick());
     }
 
     // Update is called once per frame
-    void Update()
+    void UpdateOnTick()
     {
         if (itinerary.Count > 0)
         {
             Node target = itinerary[0];
-            float step = speed * Time.deltaTime; // calculate distance to move
+            float step = speed * datastore.deltaTime; // calculate distance to move
             transform.position = Vector2.MoveTowards(transform.position, target.transform.position, step);
             if (Vector2.Distance(transform.position, target.transform.position) < 0.05)
             {
@@ -93,15 +95,11 @@ public class Pedestrian : MonoBehaviour
                 if ((!headingHome && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode))
                 {
                     this.itinerary = ReconstructPath(cameFrom, neighbor);
-                    if (this.itinerary.Count == 0) {
-                        Debug.Log($"reconstructed path for {this.gameObject} was set to empty");
-                    }
                     return;
                 }
             }
         }
         this.itinerary = new List<Node>();
-        Debug.Log($"itinerary for {this.gameObject} was set to empty");
     }
 
     private List<Node> ReconstructPath(Dictionary<Node, Node> cameFrom, Node neighbor)

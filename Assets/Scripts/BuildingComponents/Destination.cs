@@ -39,9 +39,7 @@ public class Destination : MonoBehaviour {
 
         lot.carEntranceNode.owningBuilding = building;
         lot.carExitNode.owningBuilding = building;
-    }
-
-    
+    }    
 }
 
 public enum DestinationType
