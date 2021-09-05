@@ -4,12 +4,53 @@ using System.Collections.Generic;
 
 public class CarDestination : Destination
 {
+    public static int initialCarCount = 5;
+    private PedestrianDestination backingShop;
+    public PedestrianDestination attachedShop
+    {
+        get { return backingShop; }
+        set
+        {
+            if (value != null)
+            {
+                value.attachedParkingLot = this;
+                destType = value.destType;
+            }
+            backingShop = value;
+        }
+    }
+    private Residence backingResidence;
+    public Residence attachedResidence {
+        get { return backingResidence; }
+        set
+        {
+            if (value != null)
+            {
+                value.attachedParkingLot = this;
+            }
+            backingResidence = value;
+        }
+    }
 
     // Use this for initialization
     void Start()
     {
         lot.pedestrianConnectionsEnabled = false;
         lot.carConnectionsEnabled = true;
+
+        if (attachedResidence != null)
+        {
+            for (int i = 0; i < initialCarCount; i++)
+            {
+                GameObject carObj = Object.Instantiate(prefabs.car, new Vector3(), Quaternion.identity);
+                carObj.transform.position = lot.carExitNode.transform.position;
+                Car car = carObj.GetComponent<Car>();
+                car.homeNode = lot.carEntranceNode;
+                car.desiredDestType = attachedResidence.housingType;
+                ReceiveCar(car);
+            }
+            
+        }
     }
 
     // Update is called once per frame
@@ -36,7 +77,7 @@ public class CarDestination : Destination
     {        
         carServicePending = true;
         yield return new WaitForSeconds(seconds);
-        car.headingHome = true;
+        car.headingHome = !car.headingHome;
         car.carBodySprite.enabled = true;
         car.CalculateItinerary();
         carServicePending = false;

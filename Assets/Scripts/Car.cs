@@ -20,9 +20,9 @@ public class Car : MonoBehaviour
     private float minSpeed = 0.3f;
     private float acceleration = 1f;
     private float brakingForce = 25f;
-    public bool headingHome = false;
+    public bool headingHome = true;
     public List<RoadNode> itinerary = new List<RoadNode>();
-    public Curve currentCurve;
+    public Curve currentCurve = new Curve();
 
     public List<(RoadNode, bool)> intersectionsQueued = new List<(RoadNode, bool)>();
     public List<IntersectionTile> currentlyLockedTiles = new List<IntersectionTile>();
@@ -63,9 +63,8 @@ public class Car : MonoBehaviour
         originGO = transform.Find("OriginPoint").gameObject;
         intermediateGO = transform.Find("IntermediatePoint").gameObject;
         targetGO = transform.Find("TargetPoint").gameObject;
-        CalculateItinerary();
-        currentCurve = new Curve();
-        SetNewCurve();
+        //CalculateItinerary();
+        //SetNewCurve();
 
         datastore.gameEvents
             .Receive<CityChangedEvent>()
@@ -128,10 +127,9 @@ public class Car : MonoBehaviour
                 SetNewCurve();
                 if (itinerary.Count <= 1)
                 {
-                    if (targetNode.destType == this.desiredDestType)
+                    if (targetNode.destType == this.desiredDestType || targetNode == homeNode)
                     {
                         targetNode.owningBuilding.GetComponent<CarDestination>().ReceiveCar(this);
-                        headingHome = !headingHome;
                         return;
                     }
                     headingHome = !headingHome;

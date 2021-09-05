@@ -144,7 +144,7 @@ public class Lot : MonoBehaviour, INodeConnector {
     }
 
     public Dictionary<Type, Component?> GetBuildingComponents() {
-        return new List<Type>() {typeof(Generator), typeof(Destination), typeof(PedestrianDestination), typeof(CarDestination)}
+        return new List<Type>() {typeof(Residence), typeof(Generator), typeof(Destination), typeof(PedestrianDestination), typeof(CarDestination)}
             .ToDictionary(
                 i => i,
                 i => this.transform.GetComponentInChildren(i)

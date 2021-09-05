@@ -3,6 +3,8 @@ using System.Collections;
 
 public class PedestrianDestination : Destination
 {
+    public CarDestination attachedParkingLot;
+
     // Use this for initialization
     void Start()
     {
