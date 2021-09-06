@@ -263,13 +263,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a4b29243622f4746b36a9c47169385f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  datastore: {fileID: 0}
   homeNode: {fileID: 0}
   currentNode: {fileID: 0}
   targetNode: {fileID: 0}
   desiredDestType: 0
   maxSpeed: 1
   speed: 1
-  headingHome: 0
+  headingHome: 1
   itinerary: []
   currentlyLockedTiles: 
   originGO: {fileID: 0}

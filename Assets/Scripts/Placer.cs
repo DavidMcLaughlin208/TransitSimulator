@@ -14,7 +14,6 @@ public class Placer : MonoBehaviour
 
     List<Vector2Int> roadOutlines = new List<Vector2Int>();
     List<Vector2Int> nextBlockOrientation = BlockOrientations.L;
-    bool tempSwitchForHotelsAndShops = false;
 
     PlacementPreview preview = null;
     public class PlacementPreview {
@@ -71,38 +70,45 @@ public class Placer : MonoBehaviour
                     .Also(i => PlaceRoad(i)); // place roads for the whole block
                 preview.lotOrigins
                     .Also(coord => FindAndAssignConnectedTileForLot(coord));
-                preview.roadCoords.SelectMany(i => {
-                        return datastore.city.GetImmediateNeighbors(i) // get any neighbors from an adjacent block to be refreshed
-                            .Where(i => datastore.city[i].nodeTile != null && !preview.roadCoords.Contains(i))
-                            .Concat(new List<Vector2Int> { i })
-                            .ToList();
-                    })
+                preview.roadCoords.SelectMany(i =>
+                {
+                    return datastore.city.GetImmediateNeighbors(i) // get any neighbors from an adjacent block to be refreshed
+                        .Where(i => datastore.city[i].nodeTile != null && !preview.roadCoords.Contains(i))
+                        .Concat(new List<Vector2Int> { i })
+                        .ToList();
+                })
                     .Also(i => datastore.city[i].nodeTile.ResetTile())
                     .Also(i => ReorientRoad(i)) // refresh all roads that are in new block or adjacent to it
                     .Also(i => datastore.city[i].nodeTile.DisableUnusedRoadNodes())
                     .Also(i => datastore.city[i].nodeTile.EstablishNodeConnections())
-                    .Also(roadCoord => {
+                    .Also(roadCoord =>
+                    {
                         datastore.city.GetImmediateNeighbors(roadCoord)
                             .Where(i => datastore.city[i].nodeTile == null)
-                            .Also(lotOrigin => {
+                            .Also(lotOrigin =>
+                            {
                                 var lot = datastore.city[lotOrigin].occupier.GetComponent<Lot>();
-                                if (lot != null && lot.connectedTile != null) {
+                                if (lot != null && lot.connectedTile != null)
+                                {
                                     var roadTile = lot.connectedTile;
                                     var coordsForConnectedTile =
                                         roadTile.coordinateLocation;
                                     // only refresh street connection for all roadCoords, since they have just gotten refreshed
-                                    if (coordsForConnectedTile == roadCoord) {
+                                    if (coordsForConnectedTile == roadCoord)
+                                    {
                                         lot.ResetConnections();
                                         ConnectLotToStreet(lotOrigin, roadTile);
                                     }
-                                } else {
+                                }
+                                else
+                                {
                                     ConnectLotToStreet(lotOrigin); // connect lot to a random adjacent street when it is not currently connected
                                 }
                             });
                     })
-                    .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines())
+                    .Also(i => datastore.city[i].nodeTile.RecalculateNodeLines());
                     //.Also(i => PlaceRandomDestination(i, DestinationType.COFFEE))
-                    .Also(i => PlaceRandomCar(i, DestinationType.COFFEE));
+                    //.Also(i => PlaceRandomCar(i, DestinationType.COFFEE));
                 nextBlockOrientation = BlockOrientations.allOrientations.Except(new List<List<Vector2Int>>() {nextBlockOrientation}).getRandomElement();
                 preview.Cleanup();
                 datastore.gameEvents.Publish(new CityChangedEvent());
@@ -208,7 +214,11 @@ public class Placer : MonoBehaviour
                 var connectedTile = lot.connectedTile;
                 if (lotComponents.Values.All(i => i == null))
                 { // if this lot is empty
-                    PlaceParkingLot(e.cell.ToVec2());
+                    bool placed = PlaceParkingLot(e.cell.ToVec2());
+                    if (!placed)
+                    {
+                        return;
+                    }
 
                     lot.carConnectionsEnabled = true;
                     lot.pedestrianConnectionsEnabled = false;
@@ -430,13 +440,37 @@ public class Placer : MonoBehaviour
         building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
     }
 
-    void PlaceParkingLot(Vector2Int origin)
+    bool PlaceParkingLot(Vector2Int origin)
     {
-        var building = PlaceAnonBuilding(origin);
-        building.gameObject.name = "ParkingLot";
-        CarDestination carDestination = building.AddAndGetComponent<CarDestination>();
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
-        carDestination.destType = DestinationType.COFFEE;
+        List<Vector2Int> adjacentBuildingLocationList = datastore.city.GetImmediateNeighbors(origin).Where(i =>
+        {
+            if (datastore.city[i].occupier != null && datastore.city[i].occupier.GetComponent<Lot>() != null)
+            {
+                datastore.city[i].occupier.GetComponent<Lot>().GetBuildingComponents().TryGetValue(typeof(Residence), out Component residence);
+                datastore.city[i].occupier.GetComponent<Lot>().GetBuildingComponents().TryGetValue(typeof(PedestrianDestination), out Component shop);
+                return shop != null || residence != null;
+
+            }
+            return false;
+        }).ToList();
+        if (adjacentBuildingLocationList.Count > 0)
+        {
+            Vector2Int adjacentBuildingLocation = adjacentBuildingLocationList[0];
+            var building = PlaceAnonBuilding(origin);
+            building.gameObject.name = "ParkingLot";
+            CarDestination carDestination = building.AddAndGetComponent<CarDestination>();
+
+            // Assuming that only one of these will be present on a lot at a time. But if there are both then a parking lot would serve both the shop and the residence
+            carDestination.attachedResidence = (Residence) datastore.city[adjacentBuildingLocation].occupier.GetComponent<Lot>().GetBuildingComponents()[typeof(Residence)];
+            carDestination.attachedShop = (PedestrianDestination)datastore.city[adjacentBuildingLocation].occupier.GetComponent<Lot>().GetBuildingComponents()[typeof(PedestrianDestination)];
+
+            building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+            return true;
+        } else
+        {
+            // Display message explaining parking lot needs to be placed next to a shop or apartment
+            return false;
+        }
     }
 
     void PlaceShop(Vector2Int origin, DestinationType destType) {
@@ -546,7 +580,7 @@ public class Placer : MonoBehaviour
                     {
                         continue;
                     }
-                    GameObject carObj = Object.Instantiate(prefabs.car, transform);
+                    GameObject carObj = Object.Instantiate(prefabs.car, new Vector3(), Quaternion.identity);
                     carObj.transform.position = roadNode.transform.position;
                     Car car = carObj.GetComponent<Car>();
                     car.SetNewCurrentNode((RoadNode)roadNode);

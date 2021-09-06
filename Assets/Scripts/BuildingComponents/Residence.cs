@@ -6,6 +6,7 @@ public class Residence : MonoBehaviour {
     public Lot lot;
     public Building building;
     public DestinationType housingType;
+    public CarDestination attachedParkingLot;
 
     public int capacity = 0;
 

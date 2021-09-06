@@ -101,6 +101,11 @@ public class Tile : MonoBehaviour, INodeConnector
                 continue;
             }
             Car firstCar = currentQueue[0];
+            if (carsLockingIntersection.Contains(firstCar))
+            {
+                CycleActiveIntersectionDirection();
+                continue;
+            }
                 
             intersectionLocked = true;
             DirectionUtils.IntersectionUtils.Turn turnType = firstCar.GetTurn(this);
