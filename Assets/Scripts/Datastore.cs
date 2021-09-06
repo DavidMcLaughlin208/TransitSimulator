@@ -52,6 +52,7 @@ public class Datastore : MonoBehaviour {
     //         | |
     //         |_|
     public ReactiveProperty<ToolType?> activeTool = new ReactiveProperty<ToolType?>();
+    public ReactiveProperty<TrainLineToolType?> activeLineToolType = new ReactiveProperty<TrainLineToolType?>();
     public ReactiveProperty<DestinationType?> activeToolColor = new ReactiveProperty<DestinationType?>();
     public MessageBroker inputEvents = new MessageBroker();
 

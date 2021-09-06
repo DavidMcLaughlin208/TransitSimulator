@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
@@ -23,6 +24,17 @@ public class ToolPicker : MonoBehaviour {
         MapButtonToToolType(apartmentPlacerButton, ToolType.APARTMENT_PLACER);
         var parkingLotPlacerButton = datastore.canvasParent.transform.Find("ParkingLotPlacer").GetComponent<Button>();
         MapButtonToToolType(parkingLotPlacerButton, ToolType.PARKINGLOT_PLACER);
+        var trainStationPlacerButton = datastore.canvasParent.transform.Find("TrainStationPlacer").GetComponent<Button>();
+        MapButtonToToolType(trainStationPlacerButton, ToolType.TRAINSTATION_PLACER);
+        var trainNewLineButton = datastore.canvasParent.transform.Find("TrainStationNewLine").GetComponent<Button>();
+        var trainExtendLineButton = datastore.canvasParent.transform.Find("TrainStationExtendLine").GetComponent<Button>();
+        datastore.activeTool.Subscribe(e => {
+            trainNewLineButton.gameObject.SetActive(e == ToolType.TRAINSTATION_PLACER);
+            trainExtendLineButton.gameObject.SetActive(e == ToolType.TRAINSTATION_PLACER);
+            datastore.activeLineToolType.Value = null;
+        });
+        MapButtonToTrainLineToolType(trainNewLineButton, TrainLineToolType.NEW);
+        MapButtonToTrainLineToolType(trainExtendLineButton, TrainLineToolType.EXTEND);
 
 
         var coffeeColorButton = datastore.canvasParent.transform.Find("CoffeeColorButton").GetComponent<Button>();
@@ -45,6 +57,20 @@ public class ToolPicker : MonoBehaviour {
 
         datastore.activeTool.Subscribe(e => {
             if (e == toolType) {
+                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.blue];
+            } else {
+                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
+            }
+        });
+    }
+
+    public void MapButtonToTrainLineToolType(Button button, TrainLineToolType lineToolType) {
+        button.OnClickAsObservable().Subscribe(_ => {
+            datastore.activeLineToolType.Value = lineToolType;
+        });
+
+        datastore.activeLineToolType.Subscribe(e => {
+            if (e == lineToolType) {
                 button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.blue];
             } else {
                 button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
@@ -80,5 +106,6 @@ public enum ToolType {
     SHOP_PLACER,
     HOTEL_PLACER,
     APARTMENT_PLACER,
-    PARKINGLOT_PLACER
+    PARKINGLOT_PLACER,
+    TRAINSTATION_PLACER,
 }

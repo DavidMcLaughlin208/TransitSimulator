@@ -47,3 +47,6 @@ public class PedestrianDespawnedEvent {
 public class PedestrianTripCompletedEvent {
     public Pedestrian pedestrian;
 }
+public class TrainNetworkChangedEvent {
+    public int lineChanged;
+}
