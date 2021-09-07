@@ -29,10 +29,12 @@ public class PedestrianDestination : Destination
         pedServicePending = true;
         var initStamp = datastore.tickCounter.Value;
         yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
-        pedestrian.headingHome = true;
-        pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
-        pedestrian.currentNode = lot.pedestrianExitNode;
-        pedestrian.CalculateItinerary();
-        pedServicePending = false;
+        if (pedestrian != null) {
+            pedestrian.headingHome = true;
+            pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
+            pedestrian.currentNode = lot.pedestrianExitNode;
+            pedestrian.CalculateItinerary();
+            pedServicePending = false;
+        }
     }
 }

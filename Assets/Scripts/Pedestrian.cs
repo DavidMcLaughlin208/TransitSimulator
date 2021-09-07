@@ -13,12 +13,13 @@ public class Pedestrian : MonoBehaviour
     public DestinationType desiredDestType;
     public float speed = 2f;
     public bool headingHome = false;
+    public int currentPatience = 0;
+    public bool despawned = false;
 
     public void Awake() {
         datastore = GameObject.Find("God").GetComponent<Datastore>();
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         GetComponent<SpriteRenderer>().color = ColorUtils.GetColorForDestType(desiredDestType);
@@ -27,12 +28,29 @@ public class Pedestrian : MonoBehaviour
             .Receive<CityChangedEvent>()
             .Subscribe(_ => CalculateItinerary());
 
-        datastore.tickCounter.Subscribe(_ => UpdateOnTick());
+        currentPatience = datastore.basePedPatience;
+
+        datastore.tickCounter
+            .Where(_ => !despawned)
+            .Subscribe(_ => UpdateOnTick());
+
+        datastore.gameEvents.Receive<PedestrianDespawnedEvent>().Subscribe(e => {
+            if (e.pedestrians.Contains(this)) {
+                despawned = true;
+                Debug.Log("I'm gonna kill myself now");
+                // do some particle effects or some shit
+                GameObject.Destroy(this.gameObject);
+            }
+        });
+
+        datastore.gameEvents.Publish(new PedestrianSpawnedEvent() {
+            pedestrians = new List<Pedestrian>() { this },
+        });
     }
 
-    // Update is called once per frame
     void UpdateOnTick()
     {
+        currentPatience--;
         if (itinerary.Count > 0)
         {
             Node target = itinerary[0];
@@ -44,6 +62,13 @@ public class Pedestrian : MonoBehaviour
                 itinerary.RemoveAt(0);
                 if (itinerary.Count == 0) {
                     currentNode.owningBuilding.ReceivePedestrian(this);
+                    if (!headingHome) {
+                        datastore.gameEvents.Publish<PedestrianTripCompletedEvent>(new PedestrianTripCompletedEvent() {
+                            pedestrian = this
+                        });
+                        currentPatience = datastore.basePedPatience;
+                        Debug.Log("Completed a trip!");
+                    }
                 }
             }
         }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 //  _                   _
 // (_)                 | |
@@ -37,3 +38,12 @@ public class KeyEvent {
 //   __/ |                                    | |
 //  |___/                                     |_|
 public class CityChangedEvent {}
+public class PedestrianSpawnedEvent {
+    public List<Pedestrian> pedestrians;
+}
+public class PedestrianDespawnedEvent {
+    public List<Pedestrian> pedestrians;
+}
+public class PedestrianTripCompletedEvent {
+    public Pedestrian pedestrian;
+}
