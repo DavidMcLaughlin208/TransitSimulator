@@ -8,6 +8,7 @@ public class Placer : MonoBehaviour
 {
     Datastore datastore;
     Prefabs prefabs;
+    TrainNetwork network;
 
     public static int carCount = 0;
     public static int carMax = 100;
@@ -37,6 +38,7 @@ public class Placer : MonoBehaviour
     public void Awake() {
         datastore = this.gameObject.GetComponent<Datastore>();
         prefabs = this.gameObject.GetComponent<Prefabs>();
+        network = this.gameObject.GetComponent<TrainNetwork>();
 
         nextBlockOrientation = BlockOrientations.allOrientations.getRandomElement();
     }
@@ -162,77 +164,65 @@ public class Placer : MonoBehaviour
         datastore.inputEvents // click on an empty lot to add a shop
             .Receive<ClickEvent>()
             .Where(_ => datastore.activeTool.Value == ToolType.SHOP_PLACER)
-            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Where(e => TileIsOccupiedByEmptyLot(e.cell.ToVec2()))
             .Subscribe(e => {
-                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
-                var lotComponents = lot.GetBuildingComponents();
-                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
-                    PlaceShop(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
-                }
+                PlaceShop(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
                 datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
         datastore.inputEvents // click on an empty lot to add a hotel
             .Receive<ClickEvent>()
             .Where(_ => datastore.activeTool.Value == ToolType.HOTEL_PLACER)
-            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Where(e => TileIsOccupiedByEmptyLot(e.cell.ToVec2()))
             .Subscribe(e => {
                 var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
-                var lotComponents = lot.GetBuildingComponents();
-                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
-                    PlaceHotel(e.cell.ToVec2());
-                    var generator =
-                    lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>();
-                    generator.SpawnPedestrian(DestinationType.COFFEE);
-                    generator.SpawnPedestrian(DestinationType.TEA);
-                    generator.SpawnPedestrian(DestinationType.BEER);
-                }
+                PlaceHotel(e.cell.ToVec2());
+                var generator = lot.GetBuildingComponents()[typeof(Generator)].GetComponent<Generator>();
+                generator.SpawnPedestrian(DestinationType.COFFEE);
+                generator.SpawnPedestrian(DestinationType.TEA);
+                generator.SpawnPedestrian(DestinationType.BEER);
                 datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
-        datastore.inputEvents
+        datastore.inputEvents // click on an empty lot to add an apartment
             .Receive<ClickEvent>()
             .Where(_ => datastore.activeTool.Value == ToolType.APARTMENT_PLACER)
-            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Where(e => TileIsOccupiedByEmptyLot(e.cell.ToVec2()))
             .Subscribe(e => {
-                var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
-                var lotComponents = lot.GetBuildingComponents();
-                if (lotComponents.Values.All(i => i == null)) { // if this lot is empty
-                    PlaceApartment(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
-                }
+                PlaceApartment(e.cell.ToVec2(), datastore.activeToolColor.Value ?? DestinationType.COFFEE);
                 datastore.gameEvents.Publish(new CityChangedEvent());
             });
 
-        datastore.inputEvents
+        datastore.inputEvents // click on an empty lot to add a parking lot
             .Receive<ClickEvent>()
             .Where(_ => datastore.activeTool.Value == ToolType.PARKINGLOT_PLACER)
-            .Where(e => TileIsOccupiedByLot(e.cell.ToVec2()))
+            .Where(e => TileIsOccupiedByEmptyLot(e.cell.ToVec2()))
             .Subscribe(e => {
                 var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
-                var lotComponents = lot.GetBuildingComponents();
                 Vector2Int coords = e.cell.ToVec2();
                 var connectedTile = lot.connectedTile;
-                if (lotComponents.Values.All(i => i == null))
-                { // if this lot is empty
-                    bool placed = PlaceParkingLot(e.cell.ToVec2());
-                    if (!placed)
-                    {
-                        return;
-                    }
+                PlaceParkingLot(e.cell.ToVec2());
+                lot.carConnectionsEnabled = true;
+                lot.pedestrianConnectionsEnabled = false;
+                lot.ResetConnections();
 
-                    lot.carConnectionsEnabled = true;
-                    lot.pedestrianConnectionsEnabled = false;
-                    lot.ResetConnections();
+                connectedTile.ResetTile();
+                ReorientRoad(connectedTile.coordinateLocation);
+                connectedTile.DisableUnusedRoadNodes();
+                connectedTile.EstablishNodeConnections();
 
-                    connectedTile.ResetTile();
-                    ReorientRoad(connectedTile.coordinateLocation);
-                    connectedTile.DisableUnusedRoadNodes();
-                    connectedTile.EstablishNodeConnections();
+                ConnectLotToStreet(coords, connectedTile);
 
-                    ConnectLotToStreet(coords, connectedTile);
+                datastore.gameEvents.Publish(new CityChangedEvent());
+            });
 
-                    datastore.gameEvents.Publish(new CityChangedEvent());
-                }
+        datastore.inputEvents // click on an empty lot to add a new train station
+            .Receive<ClickEvent>()
+            .Where(_ => datastore.activeTool.Value == ToolType.TRAINSTATION_PLACER)
+            .Where(e => TileIsOccupiedByEmptyLot(e.cell.ToVec2()))
+            .Subscribe(e => {
+                PlaceTrainStation(e.cell.ToVec2());
+                datastore.gameEvents.Publish(new CityChangedEvent());
             });
     }
 
@@ -473,6 +463,13 @@ public class Placer : MonoBehaviour
         }
     }
 
+    void PlaceTrainStation(Vector2Int origin) {
+        var building = PlaceAnonBuilding(origin);
+        building.gameObject.name = "TrainStation";
+        Transporter transporter = building.AddAndGetComponent<Transporter>();
+        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
+    }
+
     void PlaceShop(Vector2Int origin, DestinationType destType) {
         var building = PlaceAnonBuilding(origin);
         var shop = building.AddAndGetComponent<PedestrianDestination>();
@@ -618,9 +615,14 @@ public class Placer : MonoBehaviour
         return !datastore.city.ContainsKey(origin);
     }
 
-    bool TileIsOccupiedByLot(Vector2Int origin) {
-        // this DEF needs to get updated
-        return datastore.city.ContainsKey(origin) && datastore.city[origin].nodeTile == null;
+    bool TileIsOccupiedByEmptyLot(Vector2Int origin) {
+        if (!datastore.city.TileIsOccupiedByLot(origin)) {
+            return false;
+        } else {
+            var lot = datastore.city[origin].occupier.GetComponent<Lot>();
+            var lotComponents = lot.GetBuildingComponents();
+            return lotComponents.Values.All(i => i == null);
+        }
     }
 
     bool TileExistsAt(Vector2Int cell) {

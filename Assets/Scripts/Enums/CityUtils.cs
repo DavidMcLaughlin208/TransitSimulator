@@ -96,4 +96,11 @@ public static class CityUtils {
                 .Where(coord => city.Keys.Contains(coord))
                 .ToList();
     }
+
+    public static bool TileIsOccupiedByLot(
+        this Dictionary<Vector2Int, CityTile> city,
+        Vector2Int origin
+    ) {
+        return city.ContainsKey(origin) && city[origin].nodeTile == null;
+    }
 }
