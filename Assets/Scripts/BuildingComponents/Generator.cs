@@ -36,7 +36,6 @@ public class Generator : MonoBehaviour {
         datastore.tickCounter
             .Where(counterValue => counterValue % Mathf.RoundToInt(60 / datastore.tickModifier.Value) == 0) // do this every 60 ticks
             .Subscribe(_ => {
-                Debug.Log("Trying to spawn ped");
                 var nextType = DestinationUtils.allDestTypes.getRandomElement();
                 if (random.Next(101) < (datastore.spawnChance.Value * 100)) {
                     SpawnPedestrian(nextType);
