@@ -15,6 +15,7 @@ public class God : MonoBehaviour
         this.gameObject.AddComponent<Placer>();
         this.gameObject.AddComponent<ToolPicker>();
         this.gameObject.AddComponent<GameUI>();
+        this.gameObject.AddComponent<PedestrianWatcher>();
     }
 
     void Start() {

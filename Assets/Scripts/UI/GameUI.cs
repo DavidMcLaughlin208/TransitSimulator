@@ -14,5 +14,11 @@ public class GameUI : MonoBehaviour {
         timeScaleSlider.OnValueChangedAsObservable().Subscribe(newValue => {
             datastore.tickModifier.Value = newValue;
         });
+
+        var populationValue = datastore.canvasParent.transform.Find("PopulationValueText").GetComponent<Text>();
+        datastore.totalPopulation.SubscribeToText(populationValue);
+
+        var completedTripsValue = datastore.canvasParent.transform.Find("CompletedTripsValueText").GetComponent<Text>();
+        datastore.completedTrips.SubscribeToText(completedTripsValue);
     }
 }
