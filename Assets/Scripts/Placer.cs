@@ -427,7 +427,9 @@ public class Placer : MonoBehaviour
         var building = PlaceAnonBuilding(origin);
         building.gameObject.name = "Hotel";
         building.AddComponent<Generator>();
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
+        //building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.Hotel);
+
     }
 
     bool PlaceParkingLot(Vector2Int origin)
@@ -454,7 +456,8 @@ public class Placer : MonoBehaviour
             carDestination.attachedResidence = (Residence) datastore.city[adjacentBuildingLocation].occupier.GetComponent<Lot>().GetBuildingComponents()[typeof(Residence)];
             carDestination.attachedShop = (PedestrianDestination)datastore.city[adjacentBuildingLocation].occupier.GetComponent<Lot>().GetBuildingComponents()[typeof(PedestrianDestination)];
 
-            building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+            //building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+            building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.ParkingLot);
             return true;
         } else
         {
@@ -467,7 +470,8 @@ public class Placer : MonoBehaviour
         var building = PlaceAnonBuilding(origin);
         building.gameObject.name = "TrainStation";
         Transporter transporter = building.AddAndGetComponent<Transporter>();
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
+        //building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.TrainStation);
     }
 
     void PlaceShop(Vector2Int origin, DestinationType destType) {

@@ -20,7 +20,8 @@ static class ColorUtils
 
     public enum Colors
     {
-        ValidPlacement, InvalidPlacement, SelectedButton, UnselectedButton, Coffee, Tea, Beer
+        ValidPlacement, InvalidPlacement, SelectedButton, UnselectedButton, Coffee, Tea, Beer, TrainStation,
+        Hotel, ParkingLot
     }
 
     public static Color GetColorForDestType(DestinationType destType)
@@ -134,6 +135,24 @@ static class ColorUtils
             {
                 {Theme.Solarized, solColors[SolarizedColors.blue]},
                 {Theme.Light, lightTheme[LightTheme.blue]}
+            }
+        },
+        {Colors.TrainStation, new Dictionary<Theme, Color>()
+            {
+                {Theme.Solarized, solColors[SolarizedColors.cyan]},
+                {Theme.Light, lightTheme[LightTheme.lightblue]}
+            }
+        },
+        {Colors.Hotel, new Dictionary<Theme, Color>()
+            {
+                {Theme.Solarized, solColors[SolarizedColors.brblack]},
+                {Theme.Light, lightTheme[LightTheme.darkorange]}
+            }
+        },
+        {Colors.ParkingLot, new Dictionary<Theme, Color>()
+            {
+                {Theme.Solarized, solColors[SolarizedColors.brwhite]},
+                {Theme.Light, lightTheme[LightTheme.grey]}
             }
         }
     };
