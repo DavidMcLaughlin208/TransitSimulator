@@ -320,9 +320,9 @@ public class Placer : MonoBehaviour
             lot.transform.position = GetLotCenterFromTopLeftOrigin(origin);
         }
         if (validPlacement) {
-            lot.GetComponent<SpriteRenderer>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.green];
+            lot.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.ValidPlacement);
         } else {
-            lot.GetComponent<SpriteRenderer>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.magenta];
+            lot.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.InvalidPlacement);
         }
         return lot;
     }
@@ -427,7 +427,9 @@ public class Placer : MonoBehaviour
         var building = PlaceAnonBuilding(origin);
         building.gameObject.name = "Hotel";
         building.AddComponent<Generator>();
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
+        //building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblack");
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.Hotel);
+
     }
 
     bool PlaceParkingLot(Vector2Int origin)
@@ -454,7 +456,8 @@ public class Placer : MonoBehaviour
             carDestination.attachedResidence = (Residence) datastore.city[adjacentBuildingLocation].occupier.GetComponent<Lot>().GetBuildingComponents()[typeof(Residence)];
             carDestination.attachedShop = (PedestrianDestination)datastore.city[adjacentBuildingLocation].occupier.GetComponent<Lot>().GetBuildingComponents()[typeof(PedestrianDestination)];
 
-            building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+            //building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/brblue");
+            building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.ParkingLot);
             return true;
         } else
         {
@@ -467,7 +470,8 @@ public class Placer : MonoBehaviour
         var building = PlaceAnonBuilding(origin);
         building.gameObject.name = "TrainStation";
         Transporter transporter = building.AddAndGetComponent<Transporter>();
-        building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
+        //building.GetComponent<Building>().parentLot.gameObject.assignSpriteFromPath("Sprites/cyan");
+        building.GetComponent<Building>().parentLot.gameObject.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.TrainStation);
     }
 
     void PlaceShop(Vector2Int origin, DestinationType destType) {
@@ -558,8 +562,7 @@ public class Placer : MonoBehaviour
             })
             .ToList();
         var roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingNeighbors);
-        datastore.city[origin].nodeTile.roadType = roadTypeAndRotation.roadType;
-        datastore.city[origin].nodeTile.tileRotation = roadTypeAndRotation.rotation;
+        datastore.city[origin].nodeTile.SetRoadTypeAndRotation(roadTypeAndRotation);
     }
 
     void PlaceRandomCar(Vector2Int origin, DestinationType destType)

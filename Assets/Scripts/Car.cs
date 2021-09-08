@@ -11,6 +11,7 @@ public class Car : MonoBehaviour
     public static float brakingDistance = 0.7f;
     public static float targetStoppingDistance = 0.35f;
     public static int intersectionNodeLookaheadCount = 2;
+    public static int carCount = 0;
 
     public RoadNode homeNode;
     public RoadNode currentNode;
@@ -73,6 +74,7 @@ public class Car : MonoBehaviour
 
         datastore.gameEvents
             .Receive<CityChangedEvent>()
+            .Where(e => this.targetNode != null)
             .Subscribe(_ => {
                 CalculateItinerary();
                 if (currentCurve.currentPlace == 0)
@@ -135,6 +137,7 @@ public class Car : MonoBehaviour
                     if (targetNode.destType == this.desiredDestType || targetNode == homeNode)
                     {
                         targetNode.owningBuilding.GetComponent<CarDestination>().ReceiveCar(this);
+                        targetNode = null;
                         return;
                     }
                     headingHome = !headingHome;
@@ -168,10 +171,14 @@ public class Car : MonoBehaviour
 
     public void SetNewCurrentNode(RoadNode newNode)
     {
+        if (currentNode == newNode)
+        {
+            Debug.Log("Setting current node again");
+        }
         // Leave carQueue and intersection queues related to node we are leaving
         if (currentNode != null)
         {
-            ((RoadNode)currentNode).RemoveCar(this);
+            currentNode.RemoveCar(this);
             if (intersectionsQueued.Count > 0 && intersectionsQueued[0].Item1 == currentNode)
             {
                 currentNode.RemoveCarFromIntersectionQueue(this, currentlyLockedTiles);
@@ -301,8 +308,16 @@ public class Car : MonoBehaviour
         return DirectionUtils.IntersectionUtils.locationToDirectionMapping[intersection.Item1.location];
     }
 
-    public void CalculateItinerary()
+    public bool CalculateItinerary()
     {
+        // If the targetNode is the destination node then we shouold not recalculate the itinerary because there is nowhere else it can go. 
+        // This may change in the future and we need to consider things like if the destination is deleted right as a car is going in
+        if (FoundDestination(targetNode))
+        {
+            itinerary = new List<RoadNode>() { currentNode, targetNode };
+            return true;
+        }
+
         Dictionary<Node, int> scores = new Dictionary<Node, int>();
         List<Node> queue = new List<Node>();
         HashSet<Node> seenNodes = new HashSet<Node>();
@@ -310,13 +325,16 @@ public class Car : MonoBehaviour
 
         Node nodeToStartFrom = targetNode != null ? targetNode : currentNode;
 
-        for (int i = 0; i < currentNode.connections.Count; i++)
+        for (int i = 0; i < nodeToStartFrom.connections.Count; i++)
         {
-            Node neighbor = currentNode.connections[i];
+            Node neighbor = nodeToStartFrom.connections[i];
             queue.Add(neighbor);
             scores[neighbor] = 0;
-            cameFrom[neighbor] = currentNode;
-
+            cameFrom[neighbor] = nodeToStartFrom;
+            if (FoundDestination(neighbor))
+            {
+                return ReconstructAndSetItinerary(cameFrom, neighbor, nodeToStartFrom);
+            }
         }
 
         while (queue.Count > 0)
@@ -347,46 +365,55 @@ public class Car : MonoBehaviour
                     scores[neighbor] = newScore;
                     cameFrom[neighbor] = curNode;
                 }
-                if ((!headingHome && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode))
+                if (FoundDestination(neighbor))
                 {
-                    this.itinerary = ReconstructPath(cameFrom, neighbor);
-                    if (targetNode != null)
-                    {
-                        this.itinerary.Insert(0, currentNode);
-                    } else
-                    {
-                        for (int p = 1; p < intersectionNodeLookaheadCount; p++)
-                        {
-                            if (itinerary.Count >= p)
-                            {
-                                if (itinerary[p].IsIntersectionNode())
-                                {
-                                    itinerary[p].PlaceCarInIntersectionQueue(this);
-                                    this.intersectionsQueued.Add((itinerary[p], false));
-                                }
-                            }
-                        }
-                    }
-                    targetNode = itinerary[1];
-                    SetNewCurve();
-                    return;
+                    return ReconstructAndSetItinerary(cameFrom, neighbor, nodeToStartFrom);
                 }
             }
         }
         this.itinerary = new List<RoadNode>();
+        return false;
     }
 
-    private List<RoadNode> ReconstructPath(Dictionary<Node, Node> cameFrom, Node neighbor)
+    private List<RoadNode> ReconstructPath(Dictionary<Node, Node> cameFrom, Node neighbor, Node startingNode)
     {
         List<RoadNode> itinerary = new List<RoadNode>() { (RoadNode)neighbor };
         Node current = neighbor;
         int attemptCount = 0;
-        while (current != currentNode && attemptCount < 10000)
+        while (current != startingNode && attemptCount < 10000)
         {
             itinerary.Insert(0, (RoadNode)cameFrom[current]);
             current = cameFrom[current];
             attemptCount++;
         }
         return itinerary;
+    }
+
+    private bool FoundDestination(Node neighbor)
+    {
+        return (!headingHome && neighbor != null && neighbor.destType == desiredDestType) || (headingHome && neighbor == homeNode);
+    }
+
+    private bool ReconstructAndSetItinerary(Dictionary<Node, Node>  cameFrom, Node neighbor, Node nodeToStartFrom)
+    {
+        this.itinerary = ReconstructPath(cameFrom, neighbor, nodeToStartFrom);
+        if (targetNode != null)
+        {
+            this.itinerary.Insert(0, currentNode);
+        }
+        else
+        {
+            for (int p = 1; p < intersectionNodeLookaheadCount; p++)
+            {
+                if (itinerary.Count >= p && itinerary[p].IsIntersectionNode())
+                {
+                    itinerary[p].PlaceCarInIntersectionQueue(this);
+                    this.intersectionsQueued.Add((itinerary[p], false));
+                }
+            }
+        }
+        targetNode = itinerary[1];
+        SetNewCurve();
+        return true;
     }
 }

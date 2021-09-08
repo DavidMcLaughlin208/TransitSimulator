@@ -457,6 +457,13 @@ public class Tile : MonoBehaviour, INodeConnector
         return roadType == RoadType.Intersection || roadType == RoadType.TJunction;
     }
 
+    public void SetRoadTypeAndRotation(DirectionUtils.RoadUtils.RoadTypeAndRotation roadTypeAndRotation)
+    {
+        this.roadType = roadTypeAndRotation.roadType;
+        this.tileRotation = roadTypeAndRotation.rotation;
+        //Assign sprite here based on road type and rotation
+    }
+
     public static Dictionary<RoadNodeLocation, Direction> locationToDirectionMapping = new Dictionary<RoadNodeLocation, Direction>()
     {
         {RoadNodeLocation.NIN, Direction.NORTH}, {RoadNodeLocation.EIN, Direction.EAST}, {RoadNodeLocation.SIN, Direction.SOUTH}, {RoadNodeLocation.WIN, Direction.WEST}

@@ -57,9 +57,9 @@ public class ToolPicker : MonoBehaviour {
 
         datastore.activeTool.Subscribe(e => {
             if (e == toolType) {
-                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.blue];
+                button.gameObject.GetComponent<Image>().color = ColorUtils.getColor(ColorUtils.Colors.SelectedButton);
             } else {
-                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
+                button.gameObject.GetComponent<Image>().color = ColorUtils.getColor(ColorUtils.Colors.UnselectedButton);
             }
         });
     }
@@ -71,9 +71,9 @@ public class ToolPicker : MonoBehaviour {
 
         datastore.activeLineToolType.Subscribe(e => {
             if (e == lineToolType) {
-                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.blue];
+                button.gameObject.GetComponent<Image>().color = ColorUtils.getColor(ColorUtils.Colors.SelectedButton);
             } else {
-                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
+                button.gameObject.GetComponent<Image>().color = ColorUtils.getColor(ColorUtils.Colors.UnselectedButton);
             }
         });
     }
@@ -87,7 +87,7 @@ public class ToolPicker : MonoBehaviour {
             if (e == destType) {
                 button.gameObject.GetComponent<Image>().color = ColorUtils.GetColorForDestType(destType);
             } else {
-                button.gameObject.GetComponent<Image>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.brblack];
+                button.gameObject.GetComponent<Image>().color = ColorUtils.getColor(ColorUtils.Colors.UnselectedButton);
             }
         });
     }

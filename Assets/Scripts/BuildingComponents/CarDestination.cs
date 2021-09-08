@@ -43,6 +43,8 @@ public class CarDestination : Destination
             for (int i = 0; i < initialCarCount; i++)
             {
                 GameObject carObj = Object.Instantiate(prefabs.car, new Vector3(), Quaternion.identity);
+                carObj.name = "Car" + Car.carCount;
+                Car.carCount++;
                 carObj.transform.position = lot.carExitNode.transform.position;
                 Car car = carObj.GetComponent<Car>();
                 car.homeNode = lot.carEntranceNode;
@@ -66,7 +68,7 @@ public class CarDestination : Destination
     {
         carQueue.Enqueue(car);
         car.transform.position = lot.carExitNode.transform.position;
-        //car.carBodySprite.enabled = false;
+        car.carBodySprite.enabled = false;
         car.itinerary.Clear();
         car.SetNewCurrentNode(lot.carExitNode);
         car.targetNode = null;
@@ -78,9 +80,22 @@ public class CarDestination : Destination
         carServicePending = true;
         var initStamp = datastore.tickCounter.Value;
         yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
-        car.headingHome = !car.headingHome;
-        car.carBodySprite.enabled = true;
-        car.CalculateItinerary();
+        if (attachedResidence != null)
+        {
+            car.headingHome = false;
+        }
+        else if (attachedShop != null)
+        {
+            car.headingHome = true;
+        }
+        bool foundPath = car.CalculateItinerary();
+        if (foundPath)
+        {               
+            car.carBodySprite.enabled = true;
+        } else
+        {
+            ReceiveCar(car);
+        }
         carServicePending = false;
     }
 }
