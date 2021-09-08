@@ -37,11 +37,6 @@ public class RoadNode : Node
         owningTile.PlaceCarInIntersectionQueue(this, car);
     }
 
-    //public bool ClearedForIntersection(Car car)
-    //{
-    //    return owningTile.IsCarClearedForIntersection(car);
-    //}
-
     public List<Car> GetCarsAfterCar(Car car)
     {
         int index = cars.IndexOf(car);

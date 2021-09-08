@@ -320,9 +320,9 @@ public class Placer : MonoBehaviour
             lot.transform.position = GetLotCenterFromTopLeftOrigin(origin);
         }
         if (validPlacement) {
-            lot.GetComponent<SpriteRenderer>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.green];
+            lot.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.ValidPlacement);
         } else {
-            lot.GetComponent<SpriteRenderer>().color = ColorUtils.solColors[ColorUtils.SolarizedColors.magenta];
+            lot.GetComponent<SpriteRenderer>().color = ColorUtils.getColor(ColorUtils.Colors.InvalidPlacement);
         }
         return lot;
     }
@@ -558,8 +558,7 @@ public class Placer : MonoBehaviour
             })
             .ToList();
         var roadTypeAndRotation = DirectionUtils.RoadUtils.GetRoadTypeAndRotationForMissingNeighbors(missingNeighbors);
-        datastore.city[origin].nodeTile.roadType = roadTypeAndRotation.roadType;
-        datastore.city[origin].nodeTile.tileRotation = roadTypeAndRotation.rotation;
+        datastore.city[origin].nodeTile.SetRoadTypeAndRotation(roadTypeAndRotation);
     }
 
     void PlaceRandomCar(Vector2Int origin, DestinationType destType)
