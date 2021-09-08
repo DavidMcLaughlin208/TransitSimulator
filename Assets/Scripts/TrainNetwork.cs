@@ -48,28 +48,37 @@ public class TrainNetwork : MonoBehaviour {
                 }
             });
 
-        // datastore.inputEvents // create a new connection between two train stations on an established line
-        //     .Receive<ClickEvent>()
-        //     .Where(_ =>
-        //         datastore.activeTool.Value == ToolType.TRAINSTATION_PLACER
-        //         && datastore.activeLineToolType.Value == TrainLineToolType.EXTEND
-        //     )
-        //     .Where(e => {
-        //         if (datastore.city.TileIsOccupiedByLot(e.cell.ToVec2())) {
-        //             var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
-        //             return lot.GetBuildingComponents()[typeof(Transporter)] != null;
-        //         }
-        //         return false;
-        //     })
-        //     .Subscribe(e => {
-        //         var clickedStation = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>()
-        //             .GetBuildingComponents()[typeof(Transporter)].GetComponent<Transporter>();
-        //         if (extendOrigin == null && clickedStation.lineNumsConnected.Count > 0) {
-        //             extendOrigin = clickedStation;
-        //         } else if (clickedStation.lineNumsConnected.Contains()) {
-        //             datastore.gameEvents.Publish(new TrainNetworkChangedEvent());
-        //         }
-        //     });
+        datastore.inputEvents // create a new connection between to a single station from an established line
+            .Receive<ClickEvent>()
+            .Where(_ =>
+                datastore.activeTool.Value == ToolType.TRAINSTATION_PLACER
+                && datastore.activeLineToolType.Value == TrainLineToolType.EXTEND
+            )
+            .Where(e => {
+                if (datastore.city.TileIsOccupiedByLot(e.cell.ToVec2())) {
+                    var lot = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>();
+                    return lot.GetBuildingComponents()[typeof(Transporter)] != null;
+                }
+                return false;
+            })
+            .Subscribe(e => {
+                var clickedStation = datastore.city[e.cell.ToVec2()].occupier.GetComponent<Lot>()
+                    .GetBuildingComponents()[typeof(Transporter)].GetComponent<Transporter>();
+                if (extendOrigin == null && clickedStation.lineNumsConnected.Count > 0) {
+                    extendOrigin = clickedStation;
+                } else {
+                    var lineToExtend = extendOrigin.lineNumsConnected.First();
+                    var stationsInLine = lines[lineToExtend];
+                    if (!clickedStation.lineNumsConnected.Contains(lineToExtend) && !stationsInLine.Contains(clickedStation)) {
+                        var indexOfOriginStation = stationsInLine.FindIndex(i => i == extendOrigin);
+                        stationsInLine.Insert(indexOfOriginStation + 1, clickedStation);
+                        RefreshLineConnections(lineToExtend);
+                        UpdateLineRenderer(lineToExtend);
+                        datastore.gameEvents.Publish(new TrainNetworkChangedEvent() {lineChanged = lineToExtend});
+                        extendOrigin = null;
+                    }
+                }
+            });
     }
 
     public int ConstructNewLine(List<Transporter> stationsToConnect) {
