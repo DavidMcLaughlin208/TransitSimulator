@@ -1,18 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
+using System.Linq;
 
 public class TrainNetwork : MonoBehaviour {
+    Prefabs prefabs;
     Datastore datastore;
 
     public List<List<Transporter>> lines = new List<List<Transporter>>();
-    public int numLines = 0;
+    public List<LineRenderer> lineRenderers = new List<LineRenderer>();
+    public List<Color> lineColors = new List<Color>();
     public Transporter? extendOrigin = null;
     public Transporter? newLineOrigin = null;
 
     public void Start() {
-        var god = GameObject.Find("God");
-        datastore = god.GetComponent<Datastore>();
+        prefabs = this.GetComponent<Prefabs>();
+        datastore = this.GetComponent<Datastore>();
 
         datastore.inputEvents // create a new line between two train stations
             .Receive<ClickEvent>()
@@ -33,16 +36,16 @@ public class TrainNetwork : MonoBehaviour {
                 if (newLineOrigin == null) {
                     newLineOrigin = clickedStation;
                 } else {
-                    numLines++;
-                    newLineOrigin.lineNumsConnected.Add(numLines);
-                    clickedStation.lineNumsConnected.Add(numLines);
-                    newLineOrigin.nextStation = clickedStation;
-                    clickedStation.prevStation = newLineOrigin;
-                    lines.Add(new List<Transporter>() {newLineOrigin, clickedStation});
-                    datastore.gameEvents.Publish(new TrainNetworkChangedEvent() {lineChanged = numLines});
-                    datastore.gameEvents.Publish(new CityChangedEvent() {});
-                }
 
+                    var connectedStations = new List<Transporter>() {newLineOrigin, clickedStation};
+                    var newLineNumber = ConstructNewLine(connectedStations);
+                    RefreshLineConnections(newLineNumber);
+                    newLineOrigin.lineNumsConnected.Add(newLineNumber);
+                    clickedStation.lineNumsConnected.Add(newLineNumber);
+                    datastore.gameEvents.Publish(new TrainNetworkChangedEvent() {lineChanged = newLineNumber});
+                    datastore.gameEvents.Publish(new CityChangedEvent() {});
+                    newLineOrigin = null;
+                }
             });
 
         // datastore.inputEvents // create a new connection between two train stations on an established line
@@ -64,11 +67,43 @@ public class TrainNetwork : MonoBehaviour {
         //         if (extendOrigin == null && clickedStation.lineNumsConnected.Count > 0) {
         //             extendOrigin = clickedStation;
         //         } else if (clickedStation.lineNumsConnected.Contains()) {
-
         //             datastore.gameEvents.Publish(new TrainNetworkChangedEvent());
         //         }
-
         //     });
+    }
+
+    public int ConstructNewLine(List<Transporter> stationsToConnect) {
+        var newLineNumber = lines.Count;
+        lines.Add(stationsToConnect);
+
+        var newLineConnector = GameObject.Instantiate(prefabs.trainLineConnector).GetComponent<LineRenderer>();
+        lineRenderers.Add(newLineConnector);
+
+        var possibleColors = ColorUtils.solColors.Select(i => i.Value).Except(lineColors);
+        lineColors.Add(possibleColors.getRandomElement());
+
+        UpdateLineRenderer(newLineNumber);
+        return newLineNumber;
+    }
+
+    public void UpdateLineRenderer(int lineNumber) {
+        var allStations = lines[lineNumber];
+        var numStations = allStations.Count;
+        var line = lineRenderers[lineNumber];
+        line.positionCount = allStations.Count;
+        line.startColor = lineColors[lineNumber];
+        line.endColor = lineColors[lineNumber];
+        line.SetPositions(
+            allStations.Select(i => i.transform.position).ToArray()
+        );
+    }
+
+    public void RefreshLineConnections(int lineNumber) {
+        var stationsToConnect = lines[lineNumber];
+        for (var i = 0; i < stationsToConnect.Count - 1; i++) {
+            stationsToConnect[i].nextStation = stationsToConnect[i+1];
+            stationsToConnect[i+1].prevStation = stationsToConnect[i];
+        }
     }
 }
 

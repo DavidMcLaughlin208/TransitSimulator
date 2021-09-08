@@ -99,7 +99,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79f469b27c9064d4faf366ffd413ffb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotation: 0
   pedestrianExitNode: {fileID: 7943444815070820476}
   pedestrianEntranceNode: {fileID: 1113390938247561728}
   carExitNode: {fileID: 91180280258559279}
