@@ -15,9 +15,26 @@ public class MouseAndKeyboard : MonoBehaviour {
     public bool mouseOverCanvasElement = false;
     public Vector3 prevMousePosition;
     Vector3Int hoveredCoord;
-    List<KeyCode> pressedKeys;
+    List<KeyCode> pressedKeys = new List<KeyCode>();
+    List<KeyCode> heldKeys = new List<KeyCode>();
     List<KeyCode> watchedKeys = new List<KeyCode>() {
         KeyCode.R, KeyCode.E, KeyCode.C, KeyCode.T, KeyCode.B,
+    };
+    List<KeyCode> watchedHeldKeys = new List<KeyCode>() {
+        KeyCode.LeftControl,
+        KeyCode.RightControl,
+        KeyCode.LeftCommand,
+        KeyCode.RightCommand,
+        KeyCode.LeftAlt,
+        KeyCode.RightAlt,
+    };
+    Dictionary<KeyCode, KeyCode> condensedHeldKeys = new Dictionary<KeyCode, KeyCode>() {
+        {KeyCode.LeftControl, KeyCode.LeftControl},
+        {KeyCode.RightControl, KeyCode.LeftControl},
+        {KeyCode.LeftCommand, KeyCode.LeftControl},
+        {KeyCode.RightCommand, KeyCode.LeftControl},
+        {KeyCode.LeftAlt, KeyCode.LeftAlt},
+        {KeyCode.RightAlt, KeyCode.LeftAlt},
     };
 
     public void Start() {
@@ -84,8 +101,37 @@ public class MouseAndKeyboard : MonoBehaviour {
                         new KeyEvent() {
                             cell = hoveredCoord,
                             keyCode = keyCode,
+                            heldKeys = heldKeys,
                         });
                 });
+            });
+
+        Observable.EveryUpdate()
+            .Where(_ => {
+                var pressedDownKeys = watchedHeldKeys
+                    .Where(keyCode => Input.GetKeyDown(keyCode))
+                    .Select(key => condensedHeldKeys[key])
+                    .Distinct().ToList();
+                var liftedUpKeys = watchedHeldKeys
+                    .Where(keyCode => Input.GetKeyUp(keyCode))
+                    .Select(key => condensedHeldKeys[key])
+                    .Distinct().ToList();
+                if (pressedDownKeys.Count > 0 || liftedUpKeys.Count > 0) {
+                    var condensedKeys = heldKeys.Except(liftedUpKeys).Concat(pressedDownKeys).ToList();
+                    if (heldKeys != condensedKeys) {
+                        heldKeys = condensedKeys;
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .Subscribe(_ => {
+                datastore.inputEvents.Publish(
+                    new KeyEvent() {
+                        cell = hoveredCoord,
+                        heldKeys = heldKeys,
+                    }
+                );
             });
     }
 
