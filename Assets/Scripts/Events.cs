@@ -27,6 +27,7 @@ public class HoverEvent {
 public class KeyEvent {
     public Vector3Int cell;
     public KeyCode keyCode;
+    public List<KeyCode> heldKeys;
 }
 
 //                               _
