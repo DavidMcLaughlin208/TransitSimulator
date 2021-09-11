@@ -10,6 +10,7 @@ public class Building : MonoBehaviour
         var destinationComp = this.GetComponent<PedestrianDestination>();
         var generatorComp = this.GetComponent<Generator>();
         var residenceComp = this.GetComponent<Residence>();
+        var transporterComp  = this.GetComponent<Transporter>();
 
         // TODO this is gross - but do we have some weird summing function for pedestrian reception across all components?
         // gah
@@ -21,6 +22,9 @@ public class Building : MonoBehaviour
         }
         if (residenceComp != null) {
             residenceComp.ReceivePedestrian(pedestrian);
+        }
+        if (transporterComp != null) {
+            transporterComp.ReceivePedestrian(pedestrian);
         }
     }
 }

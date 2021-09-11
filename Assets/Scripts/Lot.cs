@@ -32,6 +32,8 @@ public class Lot : MonoBehaviour, INodeConnector {
     public RoadNode carExitNode;
     public RoadNode carEntranceNode;
 
+    public TrainNode trainStationNode;
+
     public Tile connectedTile;
 
     public bool pedestrianConnectionsEnabled = true;

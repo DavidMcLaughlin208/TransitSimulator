@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,9 +16,11 @@ public class Pedestrian : MonoBehaviour
     public bool headingHome = false;
     public int currentPatience = 0;
     public bool despawned = false;
+    public Func<Node, Vector2, Vector2> movementFunction;
 
     public void Awake() {
         datastore = GameObject.Find("God").GetComponent<Datastore>();
+        movementFunction = WalkTowardTarget;
     }
 
     void Start()
@@ -37,7 +40,6 @@ public class Pedestrian : MonoBehaviour
         datastore.gameEvents.Receive<PedestrianDespawnedEvent>().Subscribe(e => {
             if (e.pedestrians.Contains(this)) {
                 despawned = true;
-                Debug.Log("I'm gonna kill myself now");
                 // do some particle effects or some shit
                 GameObject.Destroy(this.gameObject);
             }
@@ -54,12 +56,19 @@ public class Pedestrian : MonoBehaviour
         if (itinerary.Count > 0)
         {
             Node target = itinerary[0];
-            float step = speed * datastore.deltaTime; // calculate distance to move
-            transform.position = Vector2.MoveTowards(transform.position, target.transform.position, step);
+            if (currentNode is TrainNode && target is TrainNode) {
+                // whenever the pedestrian is in the train network, use the train movement function
+                movementFunction = ((TrainNode) currentNode).owningStation.TakeTrainToTarget;
+            } else {
+                movementFunction = WalkTowardTarget;
+            }
+            transform.position = movementFunction(target, transform.position);
+
             if (Vector2.Distance(transform.position, target.transform.position) < 0.05)
             {
                 currentNode = target;
                 itinerary.RemoveAt(0);
+
                 if (itinerary.Count == 0) {
                     currentNode.owningBuilding.ReceivePedestrian(this);
                     if (!headingHome) {
@@ -67,11 +76,15 @@ public class Pedestrian : MonoBehaviour
                             pedestrian = this
                         });
                         currentPatience = datastore.basePedPatience;
-                        Debug.Log("Completed a trip!");
                     }
                 }
             }
         }
+    }
+
+    Vector2 WalkTowardTarget(Node target, Vector2 curPosition) {
+        float step = speed * datastore.deltaTime; // calculate distance to move
+        return Vector2.MoveTowards(curPosition, target.transform.position, step);
     }
 
     public void CalculateItinerary()
@@ -87,7 +100,6 @@ public class Pedestrian : MonoBehaviour
             queue.Add(neighbor);
             scores[neighbor] = 0;
             cameFrom[neighbor] = currentNode;
-
         }
 
         while (queue.Count > 0)
