@@ -15,6 +15,8 @@ public class Transporter : MonoBehaviour {
     public Transporter? prevStation = null;
     public Transporter? nextStation = null;
 
+    public List<Pedestrian> pedsWaitingAtStation;
+
     public void Awake () {
         var god = GameObject.Find("God");
         prefabs = god.GetComponent<Prefabs>();
@@ -53,11 +55,7 @@ public class Transporter : MonoBehaviour {
         return Vector2.MoveTowards(curPosition, target.transform.position, step);
     }
 
-    public void ReceivePedestrian(Pedestrian pedestrian)
-    {
-        pedestrian.headingHome = false;
-        pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
-        pedestrian.currentNode = lot.pedestrianExitNode;
-        pedestrian.CalculateItinerary();
+    public void ReceiveTrain(Train train) {
+        Debug.Log($"Train arrived from line {train.lineNum}");
     }
 }

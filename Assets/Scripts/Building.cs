@@ -23,8 +23,5 @@ public class Building : MonoBehaviour
         if (residenceComp != null) {
             residenceComp.ReceivePedestrian(pedestrian);
         }
-        if (transporterComp != null) {
-            transporterComp.ReceivePedestrian(pedestrian);
-        }
     }
 }

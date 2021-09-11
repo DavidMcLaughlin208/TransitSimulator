@@ -14,6 +14,7 @@ public class Prefabs : MonoBehaviour {
 
     public GameObject pedestrian;
     public GameObject car;
+    public GameObject train;
 
     public GameObject trainStationNode;
     public GameObject trainLineConnector;
@@ -30,6 +31,7 @@ public class Prefabs : MonoBehaviour {
 
         pedestrian = Resources.Load<GameObject>("Prefabs/CityObjects/Pedestrian");
         car = Resources.Load<GameObject>("Prefabs/CityObjects/Car");
+        train = Resources.Load<GameObject>("Prefabs/CityObjects/Train");
 
         trainStationNode = Resources.Load<GameObject>("Prefabs/CityObjects/TrainNode");
         trainLineConnector = Resources.Load<GameObject>("Prefabs/UI/TrainLineConnector");
