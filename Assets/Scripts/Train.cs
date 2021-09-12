@@ -16,6 +16,8 @@ public class Train : MonoBehaviour
     public bool waitingAtStation = false;
     public int lineNum;
 
+    public List<Pedestrian> passengers = new List<Pedestrian>();
+
     public float speed = 2f;
 
     public void Awake() {
@@ -51,7 +53,6 @@ public class Train : MonoBehaviour
             {
                 currentNode = target;
                 itinerary.RemoveAt(0);
-                target.owningStation.ReceiveTrain(this);
 
                 if (itinerary.Count == 0) {
                     if (currentNode == lineStations.First()) {
@@ -60,6 +61,8 @@ public class Train : MonoBehaviour
                         itinerary = lineStations.AsEnumerable().Reverse().Skip(1).ToList();
                     }
                 }
+
+                target.owningStation.ReceiveTrain(this);
             }
         }
     }

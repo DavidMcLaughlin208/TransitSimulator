@@ -14,6 +14,7 @@ public class Pedestrian : MonoBehaviour
     public DestinationType desiredDestType;
     public float speed = 2f;
     public bool headingHome = false;
+    public bool waitingAtStation = false;
     public int currentPatience = 0;
     public bool despawned = false;
     public Func<Node, Vector2, Vector2> movementFunction;
@@ -57,10 +58,19 @@ public class Pedestrian : MonoBehaviour
         {
             Node target = itinerary[0];
             if (currentNode is TrainNode && target is TrainNode) {
-                // whenever the pedestrian is in the train network, use the train movement function
-                movementFunction = ((TrainNode) currentNode).owningStation.TakeTrainToTarget;
+                if (!waitingAtStation) {
+                    // whenever the pedestrian is in the train network, use the train movement function
+                    var currentStation = ((TrainNode) currentNode).owningStation;
+                    movementFunction = currentStation.TakeTrainToTarget;
+                    currentStation.ReceivePedestrian(this);
+                    waitingAtStation = true;
+                }
             } else {
                 movementFunction = WalkTowardTarget;
+                if (waitingAtStation) {
+                    waitingAtStation = false;
+                    ((TrainNode) currentNode).owningStation.ReleasePedestrian(this);
+                }
             }
             transform.position = movementFunction(target, transform.position);
 

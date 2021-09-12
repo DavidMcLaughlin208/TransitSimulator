@@ -15,7 +15,7 @@ public class Transporter : MonoBehaviour {
     public Transporter? prevStation = null;
     public Transporter? nextStation = null;
 
-    public List<Pedestrian> pedsWaitingAtStation;
+    public List<Pedestrian> pedsWaitingAtStation = new List<Pedestrian>();
 
     public void Awake () {
         var god = GameObject.Find("God");
@@ -51,11 +51,30 @@ public class Transporter : MonoBehaviour {
     }
 
     public Vector2 TakeTrainToTarget(Node target, Vector2 curPosition) {
-        float step = 100f * datastore.deltaTime; // calculate distance to move
-        return Vector2.MoveTowards(curPosition, target.transform.position, step);
+        return curPosition;
     }
 
     public void ReceiveTrain(Train train) {
         Debug.Log($"Train arrived from line {train.lineNum}");
+        var pedsWaitingToBoard = pedsWaitingAtStation
+            .Where(ped => {
+                return train.itinerary.Contains(ped.itinerary[0]);
+            }).ToList();
+        var pedsToDeboard = train.passengers.Where(ped => {
+                return !train.itinerary.Contains(ped.itinerary[0]);
+            }).ToList();
+
+        train.passengers = train.passengers.Concat(pedsWaitingToBoard).Except(pedsToDeboard).Distinct().ToList();
+        pedsWaitingAtStation = pedsWaitingAtStation.Concat(pedsToDeboard).Except(pedsWaitingToBoard).Distinct().ToList();
+        Debug.Log($"There are {pedsWaitingToBoard.Count} peds waiting to board");
+        pedsWaitingAtStation.ForEach(ped => ped.transform.position = this.transform.position);
+    }
+
+    public void ReceivePedestrian(Pedestrian pedestrian) {
+        pedsWaitingAtStation.Add(pedestrian);
+    }
+
+    public void ReleasePedestrian(Pedestrian pedestrian) {
+        pedsWaitingAtStation.Remove(pedestrian);
     }
 }
