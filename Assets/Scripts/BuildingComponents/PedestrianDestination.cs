@@ -28,8 +28,10 @@ public class PedestrianDestination : Destination
     {
         pedServicePending = true;
         var initStamp = datastore.tickCounter.Value;
+        pedestrian.waitingInBuilding = true;
         yield return new WaitUntil(() => datastore.tickCounter.Value - initStamp >= datastore.baseQueueTime);
         if (pedestrian != null) {
+            pedestrian.waitingInBuilding = false;
             pedestrian.headingHome = true;
             pedestrian.transform.position = lot.pedestrianExitNode.transform.position;
             pedestrian.currentNode = lot.pedestrianExitNode;

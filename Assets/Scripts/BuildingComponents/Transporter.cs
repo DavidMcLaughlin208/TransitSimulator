@@ -26,14 +26,13 @@ public class Transporter : MonoBehaviour {
         building = this.GetComponent<Building>();
         lot = building.parentLot;
 
-        lot.pedestrianEntranceNode.owningBuilding = building;
-        lot.pedestrianExitNode.owningBuilding = building;
-
         lot.trainStationNode = GameObject.Instantiate(prefabs.trainStationNode, this.transform).GetComponent<TrainNode>();
 
         // only bind entrance and exits into train station monodirectionally
         lot.pedestrianEntranceNode.connections = lot.pedestrianEntranceNode.connections.Append(lot.trainStationNode).Distinct().ToList();
         lot.trainStationNode.connections = new List<Node>() {lot.pedestrianExitNode};
+        // DON'T set pedestrian entrance and exit to building nodes. This allows the Pedestrian code to be a bit more general,
+        // as TrainStations have an extra node that other buildings do not
 
         lot.trainStationNode.owningBuilding = building;
         lot.trainStationNode.owningStation = this;
@@ -50,12 +49,7 @@ public class Transporter : MonoBehaviour {
             });
     }
 
-    public Vector2 TakeTrainToTarget(Node target, Vector2 curPosition) {
-        return curPosition;
-    }
-
     public void ReceiveTrain(Train train) {
-        Debug.Log($"Train arrived from line {train.lineNum}");
         var pedsWaitingToBoard = pedsWaitingAtStation
             .Where(ped => {
                 return train.itinerary.Contains(ped.itinerary[0]);
@@ -66,15 +60,16 @@ public class Transporter : MonoBehaviour {
 
         train.passengers = train.passengers.Concat(pedsWaitingToBoard).Except(pedsToDeboard).Distinct().ToList();
         pedsWaitingAtStation = pedsWaitingAtStation.Concat(pedsToDeboard).Except(pedsWaitingToBoard).Distinct().ToList();
-        Debug.Log($"There are {pedsWaitingToBoard.Count} peds waiting to board");
         pedsWaitingAtStation.ForEach(ped => ped.transform.position = this.transform.position);
     }
 
     public void ReceivePedestrian(Pedestrian pedestrian) {
         pedsWaitingAtStation.Add(pedestrian);
+        pedestrian.waitingInBuilding = true;
     }
 
     public void ReleasePedestrian(Pedestrian pedestrian) {
         pedsWaitingAtStation.Remove(pedestrian);
+        pedestrian.waitingInBuilding = false;
     }
 }

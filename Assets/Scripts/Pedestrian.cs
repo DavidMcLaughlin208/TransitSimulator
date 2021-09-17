@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
@@ -14,14 +12,13 @@ public class Pedestrian : MonoBehaviour
     public DestinationType desiredDestType;
     public float speed = 2f;
     public bool headingHome = false;
-    public bool waitingAtStation = false;
+    public bool waitingInBuilding = false;
+    public Building insideBuilding = null;
     public int currentPatience = 0;
     public bool despawned = false;
-    public Func<Node, Vector2, Vector2> movementFunction;
 
     public void Awake() {
         datastore = GameObject.Find("God").GetComponent<Datastore>();
-        movementFunction = WalkTowardTarget;
     }
 
     void Start()
@@ -57,30 +54,27 @@ public class Pedestrian : MonoBehaviour
         if (itinerary.Count > 0)
         {
             Node target = itinerary[0];
-            if (currentNode is TrainNode && target is TrainNode) {
-                if (!waitingAtStation) {
-                    // whenever the pedestrian is in the train network, use the train movement function
-                    var currentStation = ((TrainNode) currentNode).owningStation;
-                    movementFunction = currentStation.TakeTrainToTarget;
-                    currentStation.ReceivePedestrian(this);
-                    waitingAtStation = true;
-                }
-            } else {
-                movementFunction = WalkTowardTarget;
-                if (waitingAtStation) {
-                    waitingAtStation = false;
-                    ((TrainNode) currentNode).owningStation.ReleasePedestrian(this);
-                }
+
+            if (!waitingInBuilding) {
+                transform.position = WalkTowardTarget(target, transform.position);
             }
-            transform.position = movementFunction(target, transform.position);
 
             if (Vector2.Distance(transform.position, target.transform.position) < 0.05)
             {
                 currentNode = target;
                 itinerary.RemoveAt(0);
 
-                if (itinerary.Count == 0) {
+                if (currentNode.owningBuilding != null && insideBuilding == null) {
                     currentNode.owningBuilding.ReceivePedestrian(this);
+                    insideBuilding = currentNode.owningBuilding;
+                }
+
+                if (itinerary.Count > 0 && itinerary[0].owningBuilding == null && insideBuilding != null) {
+                    insideBuilding.ReleasePedestrian(this);
+                    insideBuilding = currentNode.owningBuilding;
+                }
+
+                if (itinerary.Count == 0) {
                     if (!headingHome) {
                         datastore.gameEvents.Publish<PedestrianTripCompletedEvent>(new PedestrianTripCompletedEvent() {
                             pedestrian = this
