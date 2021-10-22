@@ -64,4 +64,38 @@ public static class Utils {
         curve.currentPlace = originPosition;
         return length;
     }
+
+    public static List<Vector2> getCenterPointsInHorizontalSpread(
+        Vector2 center, 
+        float containerWidth,
+        int numElements,
+        float elementWidth,
+        float marginRatio=0.1f // the margin that will attempt to buffer two elements compared to elementWidth
+    ) {
+        var centers = new List<Vector2>();
+        var widthWithMargins = (elementWidth + (elementWidth * marginRatio) * 2) * numElements;
+        if (widthWithMargins <= containerWidth || containerWidth == float.MaxValue) { // try to center elements with their margins around the center point if it fits in the container
+            var leftMostElementCenter = 
+                center - // from the center...
+                new Vector2(widthWithMargins / 2, 0) + // go to the left of the total elements' span 
+                new Vector2((elementWidth / 2) + (elementWidth * marginRatio), 0); // and then go right a single margin and half of an element width
+            for (var i = 0; i < numElements; i++) {
+                centers.Add(
+                    leftMostElementCenter + 
+                    new Vector2( i * (elementWidth + (elementWidth * marginRatio) * 2),0)
+                );
+            }
+        }
+        else {
+            var sectionWidth = containerWidth / numElements;
+            var leftBorder = center - new Vector2(containerWidth / 2, 0);
+            for (var i = 0; i < numElements; i++) {
+                centers.Add(
+                    leftBorder +
+                    new Vector2(sectionWidth * i + (sectionWidth / 2),0)
+                    );
+            }
+        }
+        return centers;
+    }
 }

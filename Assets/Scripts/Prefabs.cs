@@ -17,6 +17,8 @@ public class Prefabs : MonoBehaviour {
 
     public GameObject trainLineConnector;
 
+    public GameObject card;
+
     void Awake() {
         baseTilemapPrefab = Resources.Load<GameObject>("Prefabs/BaseTilemap");
         levelPrefab = Resources.Load<GameObject>("Prefabs/Levels/MiniDowntown");
@@ -31,5 +33,7 @@ public class Prefabs : MonoBehaviour {
         car = Resources.Load<GameObject>("Prefabs/CityObjects/Car");
 
         trainLineConnector = Resources.Load<GameObject>("Prefabs/UI/TrainLineConnector");
+
+        card = Resources.Load<GameObject>("Prefabs/UI/Card");
     }
 }
