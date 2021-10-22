@@ -54,6 +54,7 @@ public class Generator : MonoBehaviour {
         pedestrian.currentNode = lot.pedestrianExitNode;
         pedestrian.homeNode = lot.pedestrianEntranceNode;
         pedestrian.desiredDestType = destType;
+        pedestrian.insideBuilding = building;
         pedestrian.CalculateItinerary();
         pedCapacity[destType]++;
     }

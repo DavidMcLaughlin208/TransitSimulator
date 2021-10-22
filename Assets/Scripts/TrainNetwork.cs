@@ -36,7 +36,6 @@ public class TrainNetwork : MonoBehaviour {
                 if (newLineOrigin == null) {
                     newLineOrigin = clickedStation;
                 } else {
-
                     var connectedStations = new List<Transporter>() {newLineOrigin, clickedStation};
                     var newLineNumber = ConstructNewLine(connectedStations);
                     RefreshLineConnections(newLineNumber);
@@ -45,6 +44,7 @@ public class TrainNetwork : MonoBehaviour {
                     datastore.gameEvents.Publish(new TrainNetworkChangedEvent() {lineChanged = newLineNumber});
                     datastore.gameEvents.Publish(new CityChangedEvent() {});
                     newLineOrigin = null;
+                    SpawnNewTrain(clickedStation, newLineNumber);
                 }
             });
 
@@ -76,6 +76,7 @@ public class TrainNetwork : MonoBehaviour {
                         UpdateLineRenderer(lineToExtend);
                         datastore.gameEvents.Publish(new TrainNetworkChangedEvent() {lineChanged = lineToExtend});
                         extendOrigin = null;
+                        SpawnNewTrain(clickedStation, lineToExtend);
                     }
                 }
             });
@@ -113,6 +114,13 @@ public class TrainNetwork : MonoBehaviour {
             stationsToConnect[i].nextStation = stationsToConnect[i+1];
             stationsToConnect[i+1].prevStation = stationsToConnect[i];
         }
+    }
+
+    public Train SpawnNewTrain(Transporter station, int lineNum) {
+        var train = GameObject.Instantiate(prefabs.train, station.transform.position, Quaternion.identity).GetComponent<Train>();
+        train.currentNode = station.lot.trainStationNode;
+        train.lineNum = lineNum;
+        return train;
     }
 }
 

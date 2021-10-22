@@ -6,21 +6,38 @@ public class Building : MonoBehaviour
 {
     public Lot parentLot;
 
-    public void ReceivePedestrian(Pedestrian pedestrian) {
-        var destinationComp = this.GetComponent<PedestrianDestination>();
-        var generatorComp = this.GetComponent<Generator>();
-        var residenceComp = this.GetComponent<Residence>();
+    PedestrianDestination pedDest;
+    Generator generator;
+    Residence residence;
+    Transporter transporter;
 
+    public void Start() {
+        pedDest = this.GetComponent<PedestrianDestination>();
+        generator = this.GetComponent<Generator>();
+        residence = this.GetComponent<Residence>();
+        transporter  = this.GetComponent<Transporter>();
+    }
+
+    public void ReceivePedestrian(Pedestrian pedestrian) {
         // TODO this is gross - but do we have some weird summing function for pedestrian reception across all components?
         // gah
-        if (destinationComp != null) {
-            destinationComp.ReceivePedestrian(pedestrian);
+        if (pedDest != null) {
+            pedDest.ReceivePedestrian(pedestrian);
         }
-        if (generatorComp != null) {
-            generatorComp.ReceivePedestrian(pedestrian);
+        if (generator != null) {
+            generator.ReceivePedestrian(pedestrian);
         }
-        if (residenceComp != null) {
-            residenceComp.ReceivePedestrian(pedestrian);
+        if (residence != null) {
+            residence.ReceivePedestrian(pedestrian);
+        }
+        if (transporter != null) {
+            transporter.ReceivePedestrian(pedestrian);
+        }
+    }
+
+    public void ReleasePedestrian(Pedestrian pedestrian) {
+        if (transporter != null) {
+            transporter.ReleasePedestrian(pedestrian);
         }
     }
 }
