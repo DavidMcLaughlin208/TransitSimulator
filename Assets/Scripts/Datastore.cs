@@ -63,7 +63,8 @@ public class Datastore : MonoBehaviour {
     // | |_| | |
     //  \__,_|_|
     public GameObject canvasParent;
-
+    public ReactiveProperty<GameObject> hoveredCard = new ReactiveProperty<GameObject>(null);
+    public ReactiveProperty<GameObject> clickedCard = new ReactiveProperty<GameObject>(null);
 
 
     public void Start() {
