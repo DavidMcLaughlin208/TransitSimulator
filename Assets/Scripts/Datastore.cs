@@ -21,6 +21,20 @@ public class Datastore : MonoBehaviour {
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
+    //                            _       
+    //                           | |      
+    //   ___    __ _   _ __    __| |  ___ 
+    //  / __|  / _` | | '__|  / _` | / __|
+    // | (__  | (_| | | |    | (_| | \__ \
+    //  \___|  \__,_| |_|     \__,_| |___/
+    public int initialDeckSize = 10; // mock value for generating cards into deck
+    public List<GameObject> deck = new List<GameObject>();
+    
+    public List<GameObject> cardsInHand = new List<GameObject>();
+    public List<GameObject> cardsInDrawPile = new List<GameObject>();
+    public List<GameObject> cardsInDiscard = new List<GameObject>();
+    
+
     //                               _
     //                              | |
     //   __ _  __ _ _ __ ___   ___  | | ___   ___  _ __

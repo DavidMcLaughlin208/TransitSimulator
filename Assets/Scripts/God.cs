@@ -1,3 +1,4 @@
+using DefaultNamespace;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -17,6 +18,7 @@ public class God : MonoBehaviour
         this.gameObject.AddComponent<MouseAndKeyboard>();
         this.gameObject.AddComponent<TrainNetwork>();
         this.gameObject.AddComponent<Placer>();
+        this.gameObject.AddComponent<Deck>();
         this.gameObject.AddComponent<ToolPicker>();
         this.gameObject.AddComponent<GameUI>();
         this.gameObject.AddComponent<CardUI>();

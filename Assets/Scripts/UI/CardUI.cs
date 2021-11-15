@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
 using UniRx.Triggers;
+using UnityEditorInternal;
 
 public class CardUI : MonoBehaviour {
     Datastore datastore;
@@ -14,13 +15,12 @@ public class CardUI : MonoBehaviour {
     public Transform cardHandRegion;
     public Transform playArea;
 
-    public int totalDrawnCards = 0; // for debugging before cards have text
-    public List<GameObject> cardsInHand = new List<GameObject>();
+    
     public List<Vector2> cardsInHandCenters = new List<Vector2>();
     public List<Vector2> cardsHoveredCenters = new List<Vector2>();
     public int lastClickedIndex = 0;
     public GameObject lastClickedCard;
-
+    
     private void Awake() {
         datastore = this.GetComponent<Datastore>();
         prefabs = this.GetComponent<Prefabs>();
@@ -32,9 +32,20 @@ public class CardUI : MonoBehaviour {
         
         var drawCardButton = datastore.canvasParent.transform.Find("DrawCardButton").GetComponent<Button>();
         drawCardButton.OnClickAsObservable().Subscribe(_ => {
-            totalDrawnCards++;
-            var card = Instantiate(prefabs.card, cardHandRegion);
-            card.transform.Find("Text").GetComponent<Text>().text = totalDrawnCards.ToString();
+            switch (datastore.cardsInDrawPile.Count) {
+                case 0 when datastore.cardsInDiscard.Count == 0:
+                    // all cards are in hand, can't draw or shuffle
+                    return;
+                case 0:
+                    // shuffle discard back into draw pile
+                    datastore.cardsInDrawPile = datastore.cardsInDiscard.Shuffled();
+                    datastore.cardsInDiscard.Clear();
+                    break;
+            }
+            var card = datastore.cardsInDrawPile.First();
+            card.SetActive(true);
+            datastore.cardsInDrawPile.Remove(card);
+            
             card.GetComponent<Button>().OnPointerEnterAsObservable().Subscribe(_ => {
                 datastore.hoveredCard.Value = card;
             });
@@ -43,21 +54,21 @@ public class CardUI : MonoBehaviour {
             });
             card.GetComponent<Button>().OnPointerClickAsObservable().Subscribe(_ => {
                 if (datastore.clickedCard.Value != card) {
-                    datastore.clickedCard.Value = card;    
+                    datastore.clickedCard.Value = card;
                 }
             });
             
-            cardsInHand.Add(card);
+            datastore.cardsInHand.Add(card);
             RecalculateCardCenters();
         });
 
         datastore.clickedCard.Where(i => i != null).Subscribe(clickedCard => {
             if (lastClickedCard != null) {
-                cardsInHand.Insert(lastClickedIndex, lastClickedCard);    
+                datastore.cardsInHand.Insert(lastClickedIndex, lastClickedCard);    
             }
             
-            lastClickedIndex = cardsInHand.FindIndex(i => i == clickedCard);
-            cardsInHand.Remove(clickedCard);
+            lastClickedIndex = datastore.cardsInHand.FindIndex(i => i == clickedCard);
+            datastore.cardsInHand.Remove(clickedCard);
             clickedCard.transform.DOMove(playArea.transform.position, 0.2f);
             lastClickedCard = clickedCard;
 
@@ -65,16 +76,29 @@ public class CardUI : MonoBehaviour {
         });
 
         datastore.hoveredCard.Subscribe(hoveredCard => {
-            cardsInHand
+            datastore.cardsInHand
                 .Select((card, index) => new {card, index}).ToList()
                 .ForEach(i => {
-                    var intendedPosition = i.card == hoveredCard
-                        ? cardsHoveredCenters[i.index]
-                        : cardsInHandCenters[i.index];
+                    var intendedPosition = cardsInHandCenters[i.index];
+                    i.card.transform.SetSiblingIndex(i.index);
+                    if (i.card == hoveredCard) {
+                        intendedPosition = cardsHoveredCenters[i.index];
+                        i.card.transform.SetAsLastSibling();
+                    }
                     if ((Vector2) i.card.transform.position != intendedPosition) {
                         i.card.transform.DOMove(intendedPosition, 0.2f);    
                     }
                 });
+        });
+        
+        datastore.gameEvents.Receive<CityChangedEvent>().Subscribe(_ => {
+            var card = datastore.clickedCard.Value;
+            datastore.cardsInDiscard.Add(card);
+            card.SetActive(false);
+            datastore.clickedCard.Value = null;
+            lastClickedCard = null;
+            lastClickedIndex = 0;
+            
         });
     }
 
@@ -82,12 +106,13 @@ public class CardUI : MonoBehaviour {
         cardsInHandCenters = Utils.getCenterPointsInHorizontalSpread(
             cardHandRegion.position,
             ((RectTransform)cardHandRegion.transform).rect.width - 300,
-            cardsInHand.Count,
+            datastore.cardsInHand.Count,
             ((RectTransform)prefabs.card.transform).rect.width
         );
         cardsHoveredCenters = cardsInHandCenters.Select(i => i + Vector2.up * 30).ToList();
-        for (var i = 0; i < cardsInHand.Count; i++) {
-            var curCard = cardsInHand[i];
+        for (var i = 0; i < datastore.cardsInHand.Count; i++) {
+            var curCard = datastore.cardsInHand[i];
+            curCard.transform.SetSiblingIndex(i);
             var newCenter = cardsInHandCenters[i];
             curCard.transform.DOMove(newCenter, 0.3f).SetEase(Ease.OutCubic);
         }
