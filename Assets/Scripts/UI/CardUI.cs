@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
 using UniRx.Triggers;
-using UnityEditorInternal;
 
 public class CardUI : MonoBehaviour {
     Datastore datastore;
@@ -14,6 +13,9 @@ public class CardUI : MonoBehaviour {
 
     public Transform cardHandRegion;
     public Transform playArea;
+
+    public Text drawCount;
+    public Text discardCount;
 
     
     public List<Vector2> cardsInHandCenters = new List<Vector2>();
@@ -29,6 +31,13 @@ public class CardUI : MonoBehaviour {
     private void Start() {
         cardHandRegion = datastore.canvasParent.transform.Find("CardHandRegion").transform;
         playArea = cardHandRegion.Find("PlayArea").transform;
+        drawCount = datastore.canvasParent.transform.Find("DrawPileCount").GetComponent<Text>();
+        drawCount.text = datastore.cardsInDrawPile.Count.ToString();
+        datastore.cardsInDrawPile.ObserveCountChanged().SubscribeToText(drawCount);
+        discardCount = datastore.canvasParent.transform.Find("DiscardPileCount").GetComponent<Text>();
+        discardCount.text = datastore.cardsInDiscard.Count.ToString();
+        datastore.cardsInDiscard.ObserveCountChanged().SubscribeToText(discardCount);
+        
         
         var drawCardButton = datastore.canvasParent.transform.Find("DrawCardButton").GetComponent<Button>();
         drawCardButton.OnClickAsObservable().Subscribe(_ => {
@@ -38,7 +47,7 @@ public class CardUI : MonoBehaviour {
                     return;
                 case 0:
                     // shuffle discard back into draw pile
-                    datastore.cardsInDrawPile = datastore.cardsInDiscard.Shuffled();
+                    datastore.cardsInDiscard.ToList().Shuffled().ForEach(i => datastore.cardsInDrawPile.Add(i));
                     datastore.cardsInDiscard.Clear();
                     break;
             }
@@ -67,7 +76,7 @@ public class CardUI : MonoBehaviour {
                 datastore.cardsInHand.Insert(lastClickedIndex, lastClickedCard);    
             }
             
-            lastClickedIndex = datastore.cardsInHand.FindIndex(i => i == clickedCard);
+            lastClickedIndex = datastore.cardsInHand.ToList().FindIndex(i => i == clickedCard);
             datastore.cardsInHand.Remove(clickedCard);
             clickedCard.transform.DOMove(playArea.transform.position, 0.2f);
             lastClickedCard = clickedCard;
@@ -90,7 +99,7 @@ public class CardUI : MonoBehaviour {
                     }
                 });
         });
-        
+
         datastore.gameEvents.Receive<CityChangedEvent>().Subscribe(_ => {
             var card = datastore.clickedCard.Value;
             datastore.cardsInDiscard.Add(card);
@@ -98,7 +107,6 @@ public class CardUI : MonoBehaviour {
             datastore.clickedCard.Value = null;
             lastClickedCard = null;
             lastClickedIndex = 0;
-            
         });
     }
 

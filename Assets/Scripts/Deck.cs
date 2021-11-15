@@ -22,8 +22,8 @@ namespace DefaultNamespace {
                 card.transform.Find("Text").GetComponent<Text>().text = (i+1).ToString();
                 card.name = $"{i + 1}";
                 datastore.deck.Add(card);
+                datastore.cardsInDrawPile.Add(card);
             }
-            datastore.cardsInDrawPile.AddRange(datastore.deck);
         }
     }
 }

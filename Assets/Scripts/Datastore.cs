@@ -28,11 +28,11 @@ public class Datastore : MonoBehaviour {
     // | (__  | (_| | | |    | (_| | \__ \
     //  \___|  \__,_| |_|     \__,_| |___/
     public int initialDeckSize = 10; // mock value for generating cards into deck
-    public List<GameObject> deck = new List<GameObject>();
+    public ReactiveCollection<GameObject> deck = new ReactiveCollection<GameObject>();
     
-    public List<GameObject> cardsInHand = new List<GameObject>();
-    public List<GameObject> cardsInDrawPile = new List<GameObject>();
-    public List<GameObject> cardsInDiscard = new List<GameObject>();
+    public ReactiveCollection<GameObject> cardsInHand = new ReactiveCollection<GameObject>();
+    public ReactiveCollection<GameObject> cardsInDrawPile = new ReactiveCollection<GameObject>();
+    public ReactiveCollection<GameObject> cardsInDiscard = new ReactiveCollection<GameObject>();
     
 
     //                               _
