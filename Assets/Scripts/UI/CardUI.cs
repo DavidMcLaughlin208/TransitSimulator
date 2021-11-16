@@ -13,10 +13,11 @@ public class CardUI : MonoBehaviour {
 
     public Transform cardHandRegion;
     public Transform playArea;
+    public Transform drawPile;
+    public Transform discardPile;
 
     public Text drawCount;
     public Text discardCount;
-
     
     public List<Vector2> cardsInHandCenters = new List<Vector2>();
     public List<Vector2> cardsHoveredCenters = new List<Vector2>();
@@ -31,6 +32,9 @@ public class CardUI : MonoBehaviour {
     private void Start() {
         cardHandRegion = datastore.canvasParent.transform.Find("CardHandRegion").transform;
         playArea = cardHandRegion.Find("PlayArea").transform;
+        drawPile = cardHandRegion.Find("DrawPile").transform;
+        discardPile = cardHandRegion.Find("DiscardPile").transform;
+
         drawCount = datastore.canvasParent.transform.Find("DrawPileCount").GetComponent<Text>();
         drawCount.text = datastore.cardsInDrawPile.Count.ToString();
         datastore.cardsInDrawPile.ObserveCountChanged().SubscribeToText(drawCount);
@@ -38,6 +42,33 @@ public class CardUI : MonoBehaviour {
         discardCount.text = datastore.cardsInDiscard.Count.ToString();
         datastore.cardsInDiscard.ObserveCountChanged().SubscribeToText(discardCount);
         
+        RecalculateCardCenters();
+        
+        datastore.deck.ToList().ForEach(card => {
+            card.GetComponent<Button>().OnPointerEnterAsObservable().Subscribe(_ => {
+                datastore.hoveredCard.Value = card;
+            });
+            card.GetComponent<Button>().OnPointerExitAsObservable().Subscribe(_ => {
+                datastore.hoveredCard.Value = null;
+            });
+            card.GetComponent<Button>().OnPointerClickAsObservable().Subscribe(_ => {
+                if (datastore.clickedCard.Value != card) {
+                    datastore.clickedCard.Value = card;
+                }
+            });
+        });
+        
+        datastore.cardsInDrawPile.ObserveAdd().Subscribe(card => {
+            card.Value.transform.position = drawPile.position;
+        });
+
+        datastore.cardsInHand.ObserveAdd().Subscribe(card => {
+            RecalculateCardCenters();
+        });
+
+        datastore.cardsInDiscard.ObserveAdd().Subscribe(card => {
+            card.Value.transform.DOMove(discardPile.position, 0.3f);
+        });
         
         var drawCardButton = datastore.canvasParent.transform.Find("DrawCardButton").GetComponent<Button>();
         drawCardButton.OnClickAsObservable().Subscribe(_ => {
@@ -52,23 +83,8 @@ public class CardUI : MonoBehaviour {
                     break;
             }
             var card = datastore.cardsInDrawPile.First();
-            card.SetActive(true);
             datastore.cardsInDrawPile.Remove(card);
-            
-            card.GetComponent<Button>().OnPointerEnterAsObservable().Subscribe(_ => {
-                datastore.hoveredCard.Value = card;
-            });
-            card.GetComponent<Button>().OnPointerExitAsObservable().Subscribe(_ => {
-                datastore.hoveredCard.Value = null;
-            });
-            card.GetComponent<Button>().OnPointerClickAsObservable().Subscribe(_ => {
-                if (datastore.clickedCard.Value != card) {
-                    datastore.clickedCard.Value = card;
-                }
-            });
-            
             datastore.cardsInHand.Add(card);
-            RecalculateCardCenters();
         });
 
         datastore.clickedCard.Where(i => i != null).Subscribe(clickedCard => {
@@ -100,14 +116,15 @@ public class CardUI : MonoBehaviour {
                 });
         });
 
-        datastore.gameEvents.Receive<CityChangedEvent>().Subscribe(_ => {
-            var card = datastore.clickedCard.Value;
-            datastore.cardsInDiscard.Add(card);
-            card.SetActive(false);
-            datastore.clickedCard.Value = null;
-            lastClickedCard = null;
-            lastClickedIndex = 0;
-        });
+        datastore.gameEvents.Receive<CityChangedEvent>()
+            .Where(_ => datastore.clickedCard.Value != null)
+            .Subscribe(_ => {
+                var card = datastore.clickedCard.Value;
+                datastore.cardsInDiscard.Add(card);
+                datastore.clickedCard.Value = null;
+                lastClickedCard = null;
+                lastClickedIndex = 0;
+            });
     }
 
     void RecalculateCardCenters() {

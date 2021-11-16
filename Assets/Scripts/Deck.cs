@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
+using Transit.Templates;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace DefaultNamespace {
+namespace Transit {
     public class Deck : MonoBehaviour {
         Datastore datastore;
         Prefabs prefabs;
@@ -14,16 +17,34 @@ namespace DefaultNamespace {
 
         public void Start() {
             pile = GameObject.Find("DrawPile");
-
-            for (int i = 0; i < datastore.initialDeckSize; i++) {
+            var startingCards = new List<CardData> {
+                CardTemplates.BuildBlock,
+                CardTemplates.BuildBlock,
+                CardTemplates.BuildBlock,
+                
+                CardTemplates.BuildHotel,
+                CardTemplates.BuildHotel,
+                
+                CardTemplates.BuildShop,
+                CardTemplates.BuildShop,
+                
+                CardTemplates.SpawnPeds,
+                CardTemplates.SpawnPeds,
+                CardTemplates.SpawnPeds,
+            };
+            
+            startingCards.Shuffled().ForEach(cardType => {
                 var card = Instantiate(prefabs.card, pile.transform);
                 
-                card.SetActive(false);
-                card.transform.Find("Text").GetComponent<Text>().text = (i+1).ToString();
-                card.name = $"{i + 1}";
+                card.transform.Find("Text").GetComponent<Text>().text = cardType.description;
+                card.name = cardType.name;
                 datastore.deck.Add(card);
-                datastore.cardsInDrawPile.Add(card);
-            }
+            });
+            
+            datastore.deck.Take(3).ToList().ForEach(card => {
+                datastore.cardsInHand.Add(card);
+            });
+            datastore.deck.Skip(3).ToList().ForEach(card => datastore.cardsInDrawPile.Add(card));
         }
     }
 }
