@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Transit.Templates;
+using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -45,6 +47,12 @@ namespace Transit {
                 datastore.cardsInHand.Add(card);
             });
             datastore.deck.Skip(3).ToList().ForEach(card => datastore.cardsInDrawPile.Add(card));
+
+            datastore.completedTrips
+                .Where(value => value > 0 && value % datastore.tripsToEnergyConversion.Value == 0)
+                .Subscribe(_ => datastore.energy.Value++);
+
+            datastore.gameEvents.Receive<CardDrawnEvent>().Subscribe(_ => datastore.energy.Value -= datastore.drawEnergyCost);
         }
     }
 }

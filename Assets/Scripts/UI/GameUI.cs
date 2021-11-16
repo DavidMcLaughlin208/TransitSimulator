@@ -20,5 +20,8 @@ public class GameUI : MonoBehaviour {
 
         var completedTripsValue = datastore.canvasParent.transform.Find("CompletedTripsValueText").GetComponent<Text>();
         datastore.completedTrips.SubscribeToText(completedTripsValue);
+        
+        var currentEnergyValue = datastore.canvasParent.transform.Find("CurrentEnergyValueText").GetComponent<Text>();
+        datastore.energy.SubscribeToText(currentEnergyValue);
     }
 }

@@ -67,7 +67,6 @@ public class Pedestrian : MonoBehaviour
                             pedestrian = this
                         });
                         currentPatience = datastore.basePedPatience;
-                        Debug.Log("Completed a trip!");
                     }
                 }
             }

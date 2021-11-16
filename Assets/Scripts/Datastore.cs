@@ -29,10 +29,14 @@ public class Datastore : MonoBehaviour {
     //  \___|  \__,_| |_|     \__,_| |___/
     public int initialDeckSize = 10; // mock value for generating cards into deck
     public ReactiveCollection<GameObject> deck = new ReactiveCollection<GameObject>();
-    
     public ReactiveCollection<GameObject> cardsInHand = new ReactiveCollection<GameObject>();
     public ReactiveCollection<GameObject> cardsInDrawPile = new ReactiveCollection<GameObject>();
     public ReactiveCollection<GameObject> cardsInDiscard = new ReactiveCollection<GameObject>();
+
+    public int drawEnergyCost = 1;
+
+    public IntReactiveProperty energy = new IntReactiveProperty(0);
+    public IntReactiveProperty tripsToEnergyConversion = new IntReactiveProperty(25);
     
 
     //                               _

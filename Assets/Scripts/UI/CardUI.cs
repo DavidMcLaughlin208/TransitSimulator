@@ -71,21 +71,26 @@ public class CardUI : MonoBehaviour {
         });
         
         var drawCardButton = datastore.canvasParent.transform.Find("DrawCardButton").GetComponent<Button>();
-        drawCardButton.OnClickAsObservable().Subscribe(_ => {
-            switch (datastore.cardsInDrawPile.Count) {
-                case 0 when datastore.cardsInDiscard.Count == 0:
-                    // all cards are in hand, can't draw or shuffle
-                    return;
-                case 0:
-                    // shuffle discard back into draw pile
-                    datastore.cardsInDiscard.ToList().Shuffled().ForEach(i => datastore.cardsInDrawPile.Add(i));
-                    datastore.cardsInDiscard.Clear();
-                    break;
-            }
-            var card = datastore.cardsInDrawPile.First();
-            datastore.cardsInDrawPile.Remove(card);
-            datastore.cardsInHand.Add(card);
-        });
+        drawCardButton.OnClickAsObservable()
+            .Where(_ => datastore.energy.Value >= datastore.drawEnergyCost)
+            .Subscribe(_ => {
+                datastore.gameEvents.Publish(new CardDrawnEvent());
+                
+                // the remainder in this block should probably exist in Deck and subscribe to the CardDrawnEvent
+                switch (datastore.cardsInDrawPile.Count) {
+                    case 0 when datastore.cardsInDiscard.Count == 0:
+                        // all cards are in hand, can't draw or shuffle
+                        return;
+                    case 0:
+                        // shuffle discard back into draw pile
+                        datastore.cardsInDiscard.ToList().Shuffled().ForEach(i => datastore.cardsInDrawPile.Add(i));
+                        datastore.cardsInDiscard.Clear();
+                        break;
+                }
+                var card = datastore.cardsInDrawPile.First();
+                datastore.cardsInDrawPile.Remove(card);
+                datastore.cardsInHand.Add(card);
+            });
 
         datastore.clickedCard.Where(i => i != null).Subscribe(clickedCard => {
             if (lastClickedCard != null) {
