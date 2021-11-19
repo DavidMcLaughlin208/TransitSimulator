@@ -51,3 +51,11 @@ public class PedestrianTripCompletedEvent {
 public class TrainNetworkChangedEvent {
     public int lineChanged;
 }
+
+//                            _       
+//                           | |      
+//   ___    __ _   _ __    __| |  ___ 
+//  / __|  / _` | | '__|  / _` | / __|
+// | (__  | (_| | | |    | (_| | \__ \
+//  \___|  \__,_| |_|     \__,_| |___/
+public class CardDrawnEvent {}

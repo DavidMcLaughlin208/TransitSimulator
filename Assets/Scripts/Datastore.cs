@@ -21,6 +21,24 @@ public class Datastore : MonoBehaviour {
     public Dictionary<PedestrianNodeLocation, PedestrianNode> pedNodeMap = new Dictionary<PedestrianNodeLocation, PedestrianNode>();
     public Dictionary<RoadNodeLocation, RoadNode> roadNodeMap = new Dictionary<RoadNodeLocation, RoadNode>();
 
+    //                            _       
+    //                           | |      
+    //   ___    __ _   _ __    __| |  ___ 
+    //  / __|  / _` | | '__|  / _` | / __|
+    // | (__  | (_| | | |    | (_| | \__ \
+    //  \___|  \__,_| |_|     \__,_| |___/
+    public int initialDeckSize = 10; // mock value for generating cards into deck
+    public ReactiveCollection<GameObject> deck = new ReactiveCollection<GameObject>();
+    public ReactiveCollection<GameObject> cardsInHand = new ReactiveCollection<GameObject>();
+    public ReactiveCollection<GameObject> cardsInDrawPile = new ReactiveCollection<GameObject>();
+    public ReactiveCollection<GameObject> cardsInDiscard = new ReactiveCollection<GameObject>();
+
+    public int drawEnergyCost = 1;
+
+    public IntReactiveProperty energy = new IntReactiveProperty(0);
+    public IntReactiveProperty tripsToEnergyConversion = new IntReactiveProperty(25);
+    
+
     //                               _
     //                              | |
     //   __ _  __ _ _ __ ___   ___  | | ___   ___  _ __
@@ -63,7 +81,8 @@ public class Datastore : MonoBehaviour {
     // | |_| | |
     //  \__,_|_|
     public GameObject canvasParent;
-
+    public ReactiveProperty<GameObject> hoveredCard = new ReactiveProperty<GameObject>(null);
+    public ReactiveProperty<GameObject> clickedCard = new ReactiveProperty<GameObject>(null);
 
 
     public void Start() {
